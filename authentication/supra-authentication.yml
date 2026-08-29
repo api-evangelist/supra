@@ -1,0 +1,68 @@
+generated: '2026-08-29'
+method: searched
+source: >-
+  https://docs.supra.com/oracles/apis-real-time-and-historical-data/rest-api and
+  https://docs.supra.com/oracles/apis-real-time-and-historical-data/websocket-api for the price feeds key;
+  openapi/supra-rpc-node-openapi.yml (served by rpc-mainnet.supra.com/docs/api.json) for the node API, which
+  declares no components.securitySchemes and no top-level security requirement; verified against a live keyless
+  call to https://rpc-mainnet.supra.com/rpc/v1/transactions/chain_id (HTTP 200, returned "8") on 2026-08-29.
+description: >-
+  Supra runs two authentication regimes side by side. The Layer 1 node RPC is fully public and keyless — no API
+  key, no OAuth, no securityScheme in the OpenAPI at all — because authority on a blockchain comes from the
+  signature inside the transaction payload, not from a credential on the HTTP call. The oracle Price Feeds REST
+  and WebSocket APIs are the opposite: an x-api-key header is mandatory, and the key is issued by hand through a
+  Google Form request, with the surface labelled Early Access.
+schemes:
+- id: none
+  type: none
+  applies_to: Supra RPC Node API (https://rpc-mainnet.supra.com, https://rpc-testnet.supra.com)
+  in: n/a
+  description: >-
+    No credential is required for any of the 56 operations. Reads are open. Writes (submit_txn_v3,
+    submit_txn) carry a signed transaction in the request body; the Ed25519 / multi-agent signature inside
+    SignedTransaction is the authorization, and the node verifies it against the sender's on-chain
+    authentication key and sequence number. There is no server-side account to authenticate to.
+  evidence:
+    probe: https://rpc-mainnet.supra.com/rpc/v1/transactions/chain_id
+    status: 200
+    openapi_security_schemes: []
+  optional_node_operator_auth:
+    surface: GET /rpc/v4/ws
+    mechanism: Authorization Bearer token
+    description: >-
+      Per the OpenAPI description of the WebSocket upgrade operation, "When the node configures
+      websocket_auth_tokens, clients must send Authorization: Bearer <token>. Connection and subscription limits
+      are enforced per token." This is a per-node-operator configuration, not a Supra-issued credential, and the
+      public mainnet endpoint does not require it.
+- id: price-feeds-api-key
+  type: apiKey
+  applies_to: >-
+    Supra Price Feeds REST API (https://prod-kline-rest.supra.com) and Supra Price Feeds WebSocket API
+    (wss://prod-kline-ws.supra.com)
+  in: header
+  name: x-api-key
+  description: >-
+    Static API key sent on every request and on the WebSocket handshake. Missing key returns HTTP 401 with the
+    JSON body {"error":"API key is missing"} — confirmed by probing https://prod-kline-rest.supra.com/latest
+    unauthenticated on 2026-08-29.
+  key_issuance: >-
+    Manual. The docs link a Google Form request ("Please request your key here") rather than a self-serve
+    developer console; there is no signup, dashboard, or key-rotation UI documented.
+  signup: https://docs.google.com/forms/d/e/1FAIpQLSfHZr8BHLTY8q_MjbuKZPpdgQS0oGmRIrsn9H-HrieH9eQjFw/viewform
+  docs: https://docs.supra.com/oracles/apis-real-time-and-historical-data/rest-api
+  evidence:
+    probe: https://prod-kline-rest.supra.com/latest
+    status: 401
+    body: '{"error":"API key is missing"}'
+  status: Early Access — the docs state "Supra APIs are currently available in Early Access mode".
+oauth2: false
+openid_connect: false
+mutual_tls: false
+notes:
+- >-
+  No OAuth 2.0 or OpenID Connect anywhere: /.well-known/oauth-authorization-server and
+  /.well-known/openid-configuration return 404 on all five probed hosts (see well-known/supra-well-known.yml),
+  so scopes/ is not applicable for this provider.
+- >-
+  Wallet-level authentication for end users is handled by StarKey, Supra's first-party self-custodial wallet,
+  and is a client-side signing concern rather than an API credential.

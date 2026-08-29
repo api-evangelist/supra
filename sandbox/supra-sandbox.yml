@@ -1,0 +1,65 @@
+generated: '2026-08-29'
+method: searched
+source: >-
+  https://docs.supra.com/network-information, https://docs.supra.com/network/move/getting-started/testnet-faucet,
+  and openapi/supra-rpc-node-openapi.yml (the faucet operations are in the contract itself). Values below are
+  quoted from the provider; none are invented.
+description: >-
+  Supra ships a genuine, free, permissionless test environment — a full public testnet with its own chain id,
+  its own RPC host and a faucet that is part of the documented API rather than a separate console. This is a
+  stronger sandbox story than most providers manage, because the test network is the same software as production
+  and the switch between them is one base URL and one chain id.
+sandbox_available: true
+mode_switching:
+  mechanism: base URL plus chain id — there are no test-mode credentials, because there are no credentials
+  detection: >-
+    GET /rpc/v1/transactions/chain_id returns 8 on mainnet and 6 on testnet; transaction submission also echoes
+    the x-supra-chain-id response header, so a client can assert which network it just wrote to.
+environments:
+- name: Mainnet
+  network: Supra MoveVM Mainnet
+  rpc_url: https://rpc-mainnet.supra.com
+  chain_id: 8
+  faucet: null
+- name: Testnet
+  network: Supra MoveVM Testnet
+  rpc_url: https://rpc-testnet.supra.com
+  chain_id: 6
+  faucet: 'https://rpc-testnet.supra.com/rpc/v1/wallet/faucet/<ADDRESS>'
+  faucet_note: >-
+    Quoted verbatim from https://docs.supra.com/network-information. The faucet is an ordinary GET on the RPC
+    host and is declared in the OpenAPI as operationId faucet_v1, with faucet_v2 /
+    faucet_transaction_by_hash_v1 for looking up the resulting funding transaction.
+- name: SupraEVM
+  network: Supra EVM
+  rpc_url: null
+  chain_id: null
+  status: >-
+    Documented as "RPC Info Soon" with Rest API and Chain ID listed TBA and the faucet "Coming soon..." on
+    https://docs.supra.com/network-information as of 2026-08-29.
+test_credentials:
+  test_keys: false
+  key_prefixes: []
+  note: >-
+    No test-vs-live API key prefixes exist, because the node API takes no API key at all. Test identity is a
+    locally generated Ed25519 keypair funded from the faucet — `supra key generate --profile <name>` then
+    `fund-with-faucet --profile <name>` per the CLI docs.
+test_fixtures:
+  test_cards: null
+  test_accounts: >-
+    Self-generated. There are no hosted test accounts or shared fixtures; every developer creates their own
+    account and funds it from the faucet.
+  time_simulation: false
+  test_clocks: false
+  triggers: false
+dry_run:
+  supported: true
+  mechanism: POST /rpc/v3/transactions/simulate, and `supra move automation register --simulate` for automation
+  note: >-
+    Simulation runs against whichever network the RPC URL points at, so a mainnet dry run is possible without
+    committing — see conventions/supra-conventions.yml dry_run_mode.
+price_feeds_sandbox:
+  available: false
+  note: >-
+    The oracle Price Feeds REST and WebSocket APIs publish no sandbox, no test key and no sample dataset. The
+    only path to trying them is requesting a production key through the Google Form.

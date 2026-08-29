@@ -1,0 +1,98 @@
+generated: '2026-08-29'
+method: searched
+source: >-
+  npm registry.npmjs.org, PyPI pypi.org/pypi/*/json, the Entropy-Foundation GitHub organization
+  (https://github.com/Entropy-Foundation) and https://docs.supra.com/network/move/typescript-sdk /
+  https://docs.supra.com/network/move/python-sdk. Supra ships its client libraries under the Entropy Foundation
+  org (the Swiss foundation that develops Supra), which is why the package repositories do not carry the
+  supra.com domain; docs.supra.com links to these exact repositories as the official SDKs.
+description: >-
+  First-party client libraries for the Supra Layer 1 network. Registry metadata was read unauthenticated from
+  registry.npmjs.org and pypi.org at probe time. crates.io was checked for a Rust client (supra-l1-sdk) and
+  returned "crate does not exist" — the Rust client lives in the Entropy-Foundation/supra-client GitHub
+  repository and is not published to crates.io.
+packages:
+- name: supra-l1-sdk
+  registry: npm
+  language: JavaScript/TypeScript
+  official: true
+  version: 5.0.2
+  published: '2026-03-09'
+  url: https://www.npmjs.com/package/supra-l1-sdk
+  repository: https://github.com/Entropy-Foundation/supra-l1-sdk
+  docs: https://docs.supra.com/network/move/typescript-sdk
+  note: >-
+    The SDK the Supra docs teach against. GitHub release v5.0.2 is dated 2026-03-09, matching the npm publish
+    date. Supersedes supra-l1-sdk-core.
+- name: supra-ts-sdk
+  registry: npm
+  language: TypeScript
+  official: true
+  version: 1.0.0
+  published: '2026-07-21'
+  url: https://www.npmjs.com/package/supra-ts-sdk
+  repository: https://github.com/Entropy-Foundation/supra-ts-sdk
+  note: >-
+    Newer TypeScript SDK line published from Entropy-Foundation/supra-ts-sdk, the most recently pushed repo in
+    the org (2026-08-28). Only 1.0.0 is published; the docs still point at supra-l1-sdk.
+- name: supra-l1-sdk-core
+  registry: npm
+  language: TypeScript
+  official: true
+  version: 2.0.1
+  published: '2025-07-29'
+  url: https://www.npmjs.com/package/supra-l1-sdk-core
+  repository: https://github.com/Entropy-Foundation/supra-l1-sdk-core
+  note: Shared core used by supra-l1-sdk. Last publish 2025-07-29 — over a year behind the SDK that consumes it.
+- name: supra-sdk
+  registry: pypi
+  language: Python
+  official: true
+  version: 0.1.1
+  published: '2026-02-10'
+  url: https://pypi.org/project/supra-sdk/
+  repository: https://github.com/Entropy-Foundation/supra-python-sdk
+  docs: https://supra-python-sdk.docs.supra.com/
+  note: >-
+    Async SupraClient for Move-VM operations and transactions. Still pre-1.0 at 0.1.1; the source repository was
+    last pushed 2026-02-11, so the Python SDK is the least current of the first-party clients.
+- name: Supra.supramove
+  registry: vscode-marketplace
+  language: Move
+  official: true
+  version: null
+  published: null
+  url: https://marketplace.visualstudio.com/items?itemName=Supra.supramove
+  note: >-
+    Supra Move VS Code extension, linked from https://supra.com/developers/. The Visual Studio Marketplace has no
+    unauthenticated JSON metadata endpoint equivalent to registry.npmjs.org, so version and publish date were not
+    read — checked, nothing recordable, not a guess.
+- name: supra (CLI Docker image)
+  registry: dockerhub
+  language: Rust
+  official: true
+  version: null
+  published: null
+  url: https://docs.supra.com/network/move/getting-started/supra-cli-with-docker
+  note: >-
+    The Supra CLI is distributed as a Docker image rather than a language-registry package; docs.supra.com
+    documents CLI image v9.0.12 (2025-05-02) and CLI v0.5.0 in the mainnet node upgrade guide. The image tag the
+    docs pin is not exposed through a queryable registry metadata endpoint from this pass, so version is recorded
+    null. See cli/supra-cli.yml.
+- name: homebrew-supra
+  registry: homebrew-tap
+  language: Ruby
+  official: true
+  version: null
+  published: null
+  url: https://github.com/Entropy-Foundation/homebrew-supra
+  note: >-
+    First-party Homebrew tap in the Entropy-Foundation org. Last pushed 2025-04-10. Homebrew taps carry no
+    registry metadata endpoint; no formula version recorded.
+absent:
+- registry: crates.io
+  probed: https://crates.io/api/v1/crates/supra-l1-sdk
+  result: 404 — "crate `supra-l1-sdk` does not exist"
+- registry: npm
+  probed: https://registry.npmjs.org/@supra/sdk
+  result: 404 — no @supra scope on npm

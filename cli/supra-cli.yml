@@ -1,0 +1,88 @@
+generated: '2026-08-29'
+method: searched
+source: >-
+  https://docs.supra.com/network/move/cli-commands, .../cli-commands/cheat-sheet, .../cli-commands/profiles,
+  .../cli-commands/accounts, .../cli-commands/tools,
+  https://docs.supra.com/network/move/getting-started/supra-cli-with-docker,
+  https://docs.supra.com/automation/api-reference and https://github.com/Entropy-Foundation/homebrew-supra.
+description: >-
+  Supra ships a first-party CLI, `supra`, and it is the primary interface for the parts of the platform the HTTP
+  API does not cover — compiling and publishing Move packages, managing key profiles, and registering and
+  cancelling automation tasks. It is distributed as a Docker image rather than a binary on a package registry,
+  which is unusual and worth knowing before planning an agent workflow: there is no `npm i -g` or `brew install`
+  path documented on the docs site, and the container is the unit of distribution.
+name: supra
+official: true
+distribution:
+  primary: docker
+  docs: https://docs.supra.com/network/move/getting-started/supra-cli-with-docker
+  note: >-
+    The docs walk Docker installation first ("Before installing the Supra CLI, you will need to install Docker"),
+    then run the CLI inside the container. docs.supra.com states that on 2025-05-02 a new CLI image (v9.0.12) was
+    released introducing an improved profile feature; the mainnet node upgrade guide separately names CLI v0.5.0.
+  homebrew_tap: https://github.com/Entropy-Foundation/homebrew-supra
+  homebrew_note: >-
+    A first-party Homebrew tap exists in the Entropy-Foundation org (last pushed 2025-04-10) but is not linked
+    from the CLI documentation; treat Docker as the supported path.
+versions_named_in_docs:
+- version: v9.0.12
+  kind: CLI Docker image
+  date: '2025-05-02'
+  source: https://docs.supra.com/network/move/cli-commands
+- version: v0.5.0
+  kind: CLI
+  source: https://docs.supra.com/network/node/node-upgrade-guide-mainnet/cli-improvements
+command_families:
+- family: key (profiles)
+  docs: https://docs.supra.com/network/move/cli-commands/profiles
+  commands:
+  - supra key generate-profile <NAME>
+  - supra key import-profile <NAME> <PRIVATE_KEY>
+  - supra key activate-profile <NAME>
+  - supra key list-profile [OPTIONS]
+  - supra key remove-profile <PROFILE_NAME>
+- family: move account
+  docs: https://docs.supra.com/network/move/cli-commands/accounts
+  commands:
+  - supra move account create --profile <PROFILE_NAME> --url <RPC_URL>
+  - supra move account fund-with-faucet --profile <PROFILE_NAME> --url <RPC_URL>
+  - supra move account balance --profile <PROFILE_NAME> --url <RPC_URL>
+  - supra move account transfer --account <ACCOUNT> --amount <AMOUNT> --url <RPC_URL>
+- family: move tool
+  docs: https://docs.supra.com/network/move/cli-commands/tools
+  commands:
+  - supra move tool compile --package-dir <PACKAGE_DIR>
+  - supra move tool test --package-dir <PACKAGE_DIR>
+  - supra move tool publish --profile <PROFILE_NAME> --package-dir <PACKAGE_DIR> --url <RPC_URL>
+  - supra move tool run --function-id '<ADDRESS>::<CONTRACT>::<FUNCTION>' --args <ARGS> --url <RPC_URL>
+  - supra move tool view --function-id '<ADDRESS>::<CONTRACT>::<VIEW_FUNCTION>' --args <ARGS> --url <RPC_URL>
+- family: move automation
+  docs: https://docs.supra.com/automation/api-reference
+  commands:
+  - >-
+    supra move automation register --task-max-gas-amount <N> --task-gas-price-cap <N> --task-expiry-time-secs <N>
+    --task-automation-fee-cap <N> --function-id <ID> --args <ARGS> [--type-args <TYPES>] [--simulate]
+  - supra move automation cancel --task-index <TASK_INDEX> --rpc-url <RPC_URL>
+  note: >-
+    `--simulate` is a real dry-run flag on registration. Registration is CLI-only: there is no HTTP endpoint to
+    register an automation task, which is why the Automation API entry in apis.yml is a read/observation surface.
+key_flows:
+- name: Deploy a Move package
+  steps:
+  - supra key generate-profile myAccount
+  - supra move account fund-with-faucet --profile myAccount --url https://rpc-testnet.supra.com
+  - supra move tool compile --package-dir <PACKAGE_DIR>
+  - supra move tool publish --profile myAccount --package-dir <PACKAGE_DIR> --url https://rpc-testnet.supra.com
+  note: >-
+    Every subsequent command needs --profile; the provider's own Agent Skill changelog records that omitting it
+    was a documented failure mode ("Without this, subsequent --profile flags in deploy steps fail with 'profile
+    not found'").
+- name: Register and cancel an automation task
+  steps:
+  - supra move automation register ... --simulate
+  - supra move automation register ...
+  - supra move automation cancel --task-index <TASK_INDEX> --rpc-url <RPC_URL>
+related:
+  packages: packages/supra-packages.yml
+  ide: https://ide.supra.com/
+  vscode_extension: https://marketplace.visualstudio.com/items?itemName=Supra.supramove

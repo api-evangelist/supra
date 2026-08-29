@@ -1,0 +1,48 @@
+generated: '2026-08-29'
+method: derived
+source: >-
+  openapi/supra-rpc-node-openapi.yml (rpc-mainnet.supra.com/docs/api.json) for the declared 429 and its headers;
+  searches of https://docs.supra.com/network/move/rest-api,
+  https://docs.supra.com/oracles/apis-real-time-and-historical-data/rest-api and
+  https://docs.supra.com/oracles/apis-real-time-and-historical-data/websocket-api for published numeric limits.
+description: >-
+  Supra publishes almost no rate-limit information. The REST node API declares no 429 response and no
+  rate-limit headers on any of its 56 operations, so a client has no contract for behaviour under load. The one
+  place throttling is declared is the WebSocket upgrade, which is modelled properly — 429 with Retry-After and a
+  reason header — but with no published numbers. The price feeds APIs document none at all.
+limit_count: 1
+limits:
+- scope: per-connection / per-auth-token (WebSocket)
+  api: Supra RPC Node API
+  surface: GET /rpc/v4/ws
+  window: null
+  limit: null
+  burst: null
+  status_on_exhaustion: 429
+  response_headers:
+    Retry-After: Seconds to wait before retrying (integer, minimum 0).
+    X-WebSocket-Reject-Reason: Reason the connection was rejected.
+  description: >-
+    "Connection or subscription limit reached." The contract states that when a node configures
+    websocket_auth_tokens, "Connection and subscription limits are enforced per token" — so the limit is a
+    per-node-operator setting, and Supra publishes no number for the public mainnet endpoint.
+  evidence: openapi responses['429'] on operationId supra_block_ws
+undocumented:
+- api: Supra RPC Node API (REST)
+  finding: >-
+    No 429 response is declared on any of the 55 REST operations and no X-RateLimit-*, RateLimit-* or
+    Retry-After header appears anywhere in the contract outside the WebSocket upgrade. Whether the public
+    rpc-mainnet.supra.com endpoint throttles at all, and what it returns when it does, is not published.
+- api: Supra Price Feeds REST API
+  finding: >-
+    The docs page lists status codes 200/400/404/500 and no 429. No quota, no per-key limit, no headers. The
+    surface is labelled Early Access and keys are issued by manual form, which is itself the rationing mechanism.
+- api: Supra Price Feeds WebSocket API
+  finding: >-
+    No connection, subscription or message-rate limits stated. The only throughput control documented is the
+    client-chosen `resolution` on the ohlc_datafeed channel.
+observed:
+- probe: https://rpc-mainnet.supra.com/rpc/v1/transactions/chain_id
+  status: 200
+  headers_observed: no rate-limit headers returned on an unauthenticated request
+  date: '2026-08-29'

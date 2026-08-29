@@ -1,0 +1,50 @@
+generated: '2026-08-29'
+description: >-
+  Packaged Agent Skills for Supra. The first entry is Supra's own — a genuine, provider-authored, MIT-licensed
+  Claude Code skill published in the Entropy Foundation GitHub org and saved here verbatim. That is rare: most
+  providers in this catalog publish nothing an agent can load. The remaining four are API Evangelist skills
+  generated against the operationIds in openapi/supra-rpc-node-openapi.yml, covering the flows the provider's own
+  skill does not (it is a Move-language skill, not an HTTP-API skill).
+skills:
+- name: supra-move-development
+  file: supra-move-development-SKILL.md
+  method: searched
+  official: true
+  version: 2.5.0
+  license: MIT
+  source: https://github.com/Entropy-Foundation/supra-dev-skills/blob/master/SKILL.md
+  repository: https://github.com/Entropy-Foundation/supra-dev-skills
+  changelog: https://github.com/Entropy-Foundation/supra-dev-skills/blob/master/CHANGELOG.md
+  description: >-
+    "Expert guidance for building on the Supra blockchain using Move - contracts, SDK integration, dVRF,
+    Oracles, and Automation." Saved verbatim from the provider's repository (default branch `master`, pushed
+    2026-08-27). Ships alongside eight reference documents and seven example scripts in the same repo, which are
+    not mirrored here.
+  note: >-
+    Written explicitly to correct a model's wrong priors about Supra — it names the deprecated /rpc/v1/ paths,
+    the aptos_std exception, and the SDK methods that do not exist. It is a provider publishing an errata sheet
+    for AI agents, which is a posture almost nobody else in this catalog has taken.
+- name: supra-read-account-state
+  file: supra-read-account-state.md
+  method: generated
+  official: false
+  api: Supra RPC Node API
+  operations: [get_account_v3, get_account_resources_v3, get_account_resource_v3, get_account_modules_v3, get_account_module_v3, get_account_transactions_v3, coin_transactions_v3, fa_transactions_v3, statement_automated_v3]
+- name: supra-submit-transaction-safely
+  file: supra-submit-transaction-safely.md
+  method: generated
+  official: false
+  api: Supra RPC Node API
+  operations: [chain_id, transaction_parameter, get_account_v3, estimate_gas_price_v3, simulate_txn_v3, submit_txn_v3, transaction_by_hash_v4]
+- name: supra-verify-onchain-proof
+  file: supra-verify-onchain-proof.md
+  method: generated
+  official: false
+  api: Supra RPC Node API
+  operations: [events_by_type_v4, event_emission_proof_v4, proofs_event_emission_proof_v4, proofs_events_v4, transactions_inclusion_certificates_by_block_height_v4, committee_authorization_v4, committees_v4]
+- name: supra-fund-and-deploy-on-testnet
+  file: supra-fund-and-deploy-on-testnet.md
+  method: generated
+  official: false
+  api: Supra RPC Node API
+  operations: [chain_id, faucet_v1, faucet_v2, get_account_v3, transaction_parameter, simulate_txn_v3, get_account_modules_v3, get_account_module_v3, view_function_v3]

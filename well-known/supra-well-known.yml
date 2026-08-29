@@ -1,0 +1,94 @@
+generated: '2026-08-29'
+method: probed
+source: >-
+  Live GET probes of the /.well-known/ discovery surface on every apis.yml baseURL host and the docs host, run
+  2026-08-29 with a browser User-Agent. Status is the HTTP code observed at fetch time.
+description: >-
+  Supra serves no /.well-known/ discovery documents on any host. supra.com and docs.supra.com answer 404 with an
+  HTML SPA shell for every path; rpc-mainnet.supra.com and rpc-testnet.supra.com answer a bare 404; the price
+  feeds host prod-kline-rest.supra.com answers a Fastify JSON 404 ("Route GET:/.well-known/... not found"). No
+  security.txt, no OpenID/OAuth metadata, no api-catalog, no ai-plugin.json, and no A2A agent card at either the
+  current /.well-known/agent-card.json or the legacy /.well-known/agent.json path. Recorded as a measured
+  absence — no WellKnown or SecurityTxt pointer is emitted in apis.yml, because none of these paths returned a
+  document.
+hosts:
+- host: https://supra.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+- host: https://docs.supra.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+- host: https://rpc-mainnet.supra.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+- host: https://rpc-testnet.supra.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+- host: https://prod-kline-rest.supra.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404

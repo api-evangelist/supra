@@ -1,0 +1,102 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the Supra RPC Node API
+  version: 1.0.0
+extends: ../openapi/supra-rpc-node-openapi.yml
+x-provenance:
+  generated: '2026-08-29'
+  method: generated
+  source: >-
+    Enhancements over the verbatim OpenAPI 3.1.0 document Supra serves at
+    https://rpc-mainnet.supra.com/docs/api.json (saved unmodified at
+    openapi/_original/supra-rpc-node-openapi-original.json). Every value added here is taken from a Supra source
+    named in the action's description — the network information page, the docs, or a live probe. The original
+    is never mutated.
+actions:
+- target: $.servers
+  description: >-
+    The served contract declares servers as [{"url": "/"}] — correct for a node serving its own docs, useless
+    for a client generated from the file, which ends up with no host at all. Replaced with the two real network
+    hosts named on https://docs.supra.com/network-information, with the chain id each answers.
+  update:
+  - url: https://rpc-mainnet.supra.com
+    description: Supra MoveVM Mainnet. Chain id 8.
+  - url: https://rpc-testnet.supra.com
+    description: Supra MoveVM Testnet. Chain id 6. Faucet enabled.
+- target: $.info
+  description: >-
+    Adds the human documentation entry point, the terms of use, and a license. Source:
+    https://docs.supra.com/network/move/rest-api and https://supra.com/terms-of-use/ (both HTTP 200 on
+    2026-08-29). info.contact already names Supra Labs and https://supra.com in the served document and is left
+    as published.
+  update:
+    termsOfService: https://supra.com/terms-of-use/
+    x-documentation-url: https://docs.supra.com/network/move/rest-api
+    x-api-reference-url: https://rpc-mainnet.supra.com/docs/
+    x-provider: Supra (Entropy Foundation)
+- target: $.info.description
+  description: >-
+    The served description is a raw build banner (version, tag, commit hash, build time) with no prose. Prepends
+    a one-paragraph statement of what the API is, retaining the build banner underneath, so a generated client
+    or an agent reading the spec alone knows what it is holding.
+  update: >-
+    The public JSON/REST interface of a Supra Layer 1 node. Keyless and permissionless: no API key, no OAuth, no
+    securityScheme. Reads are open; writes are authorized by the Ed25519 signature inside the submitted
+    transaction and made replay-safe by a per-account sequence number. Four path versions are live
+    simultaneously (v1-v4); v1 and v2 are deprecated. Nodes prune history and answer 410 Gone for pruned ranges,
+    with the retention floor in the x-supra-oldest-block response header.
+
+
+    Build banner as served:
+
+    0.5.0
+    tag:supra_rpc_v11.5.2
+    commit_hash:5e9ea652
+    build_time:2026-08-25 08:38:29 +00:00
+- target: $.tags
+  description: >-
+    The served tags are bare names with no descriptions. Adds a one-line description to each, derived from the
+    operations grouped under it in the same document.
+  update:
+  - name: Accounts
+    description: Read account state — sequence number, authentication key, published modules, stored Move resources, and transaction / coin / fungible-asset / automation history.
+  - name: Transactions
+    description: Submit, simulate and look up transactions; read chain id, transaction parameters, gas price estimates and inclusion certificates.
+  - name: Block
+    description: Fetch executed blocks by height, by hash, or the chain tip, and list the transactions a block contains.
+  - name: Consensus
+    description: Validator-facing layer — certified consensus blocks, per-epoch committee authorizations and authorized committees.
+  - name: Events
+    description: Query emitted Move events by fully qualified event type, with optional emission proofs.
+  - name: Proofs
+    description: Merkle inclusion and event-emission proofs, single or batched, so a consumer can verify a record without trusting the node that served it.
+  - name: View
+    description: Execute a read-only Move view function by fully qualified module::function and return its MoveValues.
+  - name: Tables
+    description: Read a Move table item by handle and key.
+  - name: Faucet
+    description: Testnet only — fund an address with test SUPRA and look up the resulting funding transaction.
+  - name: Indexer
+    description: Indexed query surface.
+  - name: WebSocket
+    description: JSON-RPC 2.0 subscription stream (supra_subscribe / supra_unsubscribe) for newBlocks and newBlockHeaders.
+- target: $.paths['/rpc/v3/transactions/submit'].post
+  description: >-
+    Flags the irreversibility of the write path and points at the rehearsal endpoint. Derived from
+    conventions/supra-conventions.yml reversibility, which is itself read from the contract and the docs.
+  update:
+    x-irreversible: true
+    x-reversal-operation: null
+    x-agent-guidance: >-
+      One-way door. A committed transaction cannot be cancelled, refunded, voided or rolled back. Simulate with
+      simulate_txn_v3 first, confirm the network from the x-supra-chain-id response header, and treat a 200 as
+      final. Replay is safe — the account sequence number inside the signed payload prevents double execution —
+      so a timeout may be retried with the identical bytes.
+    x-idempotency: per-account sequence_number carried in the signed transaction; no Idempotency-Key header.
+- target: $.paths..responses['410']
+  description: >-
+    Marks 410 as permanent for this node so generated clients and retry middleware do not treat it as a
+    transient failure. The retention floor is published in the x-supra-oldest-block response header.
+  update:
+    x-retryable: false
+    x-remediation: Read x-supra-oldest-block for the retention floor, then narrow the range or query an archival node.

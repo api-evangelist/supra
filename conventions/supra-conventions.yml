@@ -1,0 +1,190 @@
+generated: '2026-08-29'
+method: searched
+source: >-
+  openapi/supra-rpc-node-openapi.yml (the OpenAPI 3.1.0 document rpc-mainnet.supra.com serves at
+  /docs/api.json), https://docs.supra.com/network/move/rest-api, https://docs.supra.com/automation/api-reference,
+  https://docs.supra.com/automation/your-first-automation-task/canceling-your-automation-task, and live probes of
+  rpc-mainnet.supra.com on 2026-08-29.
+description: >-
+  Cross-cutting request/response semantics for the Supra RPC Node API — the behaviours that apply to every
+  operation rather than to one endpoint. Supra's API is a blockchain node interface, so several of the usual
+  SaaS conventions land differently: authorization lives in the signed payload rather than a header, replay
+  protection is a protocol-level sequence number rather than an Idempotency-Key, and the write path is
+  deliberately irreversible.
+
+base_url: https://rpc-mainnet.supra.com
+testnet_base_url: https://rpc-testnet.supra.com
+api_style: REST over HTTPS, JSON request/response, with an optional BCS binary content type
+
+authentication:
+  scheme: none — the node API is public and keyless
+  detail: authentication/supra-authentication.yml
+  note: >-
+    Writes are authorized by the Ed25519 signature inside the submitted SignedTransaction, verified against the
+    sender's on-chain authentication key. The price feeds APIs use an x-api-key header instead.
+
+content_negotiation:
+  request:
+  - application/json
+  - application/x.supra.signed_transaction+bcs
+  response:
+  - application/json
+  - application/x-bcs
+  - application/octet-stream
+  note: >-
+    Most read endpoints can return canonical BCS bytes as well as JSON, which lets a client verify a response
+    against on-chain hashes rather than trusting the node's JSON rendering. Requesting BCS is a content-type
+    negotiation, not a separate endpoint.
+
+idempotency:
+  supported: true
+  mechanism: per-account monotonic sequence_number carried inside the signed transaction
+  applies_to: POST /rpc/v3/transactions/submit and POST /rpc/v1/transactions/submit
+  key_format: >-
+    Not a client-generated header. Each account has a sequence_number returned by GET /rpc/v3/accounts/{address}
+    (AccountData.sequence_number). A signed transaction commits to exactly one sequence number.
+  conflict_behavior: >-
+    Re-submitting the same signed transaction, or any other transaction bearing an already-consumed sequence
+    number, cannot execute a second time — the node rejects it. This makes retry-on-timeout safe: a client that
+    does not know whether its submit succeeded may resubmit the identical signed bytes without risking a double
+    execution, then confirm with GET /rpc/v3/transactions/{hash}.
+  retention: >-
+    Enforced for the life of the account, not a rolling window — a sequence number, once consumed, is never
+    reusable. This is stronger than a 24-hour Idempotency-Key cache.
+  header: none
+  docs: https://docs.supra.com/network/move/rest-api
+  note: >-
+    Idempotency is real and protocol-enforced here, but it is NOT the Idempotency-Key header pattern; a client
+    library written against Stripe-style conventions will not find one.
+
+pagination:
+  style: cursor
+  request_params:
+    count: Maximum number of items to return. Default 20.
+    start: >-
+      Cursor to start from. On account transaction endpoints this is the starting sequence number; on coin and
+      fungible-asset statement endpoints the cursor is derived from the transaction's index within its block plus
+      the block timestamp, and the cursor returned on the previous page is passed as the next page's start.
+    ascending: >-
+      Order flag. Defaults to false (descending by sequence number); true returns ascending order. Only present
+      on the sequence-numbered account transaction endpoints.
+  response_headers:
+    x-supra-cursor: Cursor to pass as `start` on the next page.
+    x-supra-oldest-block: Oldest block still retained by this node — the floor below which paging returns 410.
+  note: >-
+    Omitting `start` returns the most recent `count` items in descending order; supplying it returns items from
+    the cursor in ascending order. Clients must read the direction flip or they will silently page the wrong way.
+
+response_headers:
+  x-supra-chain-id: Chain id of the responding node (8 mainnet, 6 testnet). Returned on transaction submission.
+  x-supra-cursor: Pagination cursor for the next page.
+  x-supra-oldest-block: Oldest block height still served by this node.
+
+versioning:
+  scheme: URL path versioning, with multiple major versions live simultaneously
+  current: v4 (v3 for the widest coverage)
+  live_versions: [v1, v2, v3, v4]
+  mechanism: /rpc/v{n}/... path prefix; no version header, no date-pinning, no account-level default version.
+  detail: lifecycle/supra-lifecycle.yml
+  note: >-
+    v1 and v2 are marked deprecated in the OpenAPI itself (19 of 56 operations). v3 carries the broadest surface;
+    v4 adds proofs, inclusion certificates and the WebSocket stream. Not every operation exists at every version,
+    so "upgrade to the newest prefix" is not a mechanical rewrite.
+
+error_envelope:
+  media_type: application/json
+  shape: '{"message": "<string>"}'
+  schema: ErrResp
+  rfc9457: false
+  note: >-
+    A single required `message` string. No type URI, no title/status/detail/instance, no machine-readable error
+    code, no field-level validation errors. An agent can distinguish failures only by HTTP status plus prose.
+  detail: errors/supra-problem-types.yml
+
+rate_limit_signaling:
+  rest: >-
+    No rate-limit headers are declared anywhere in the OpenAPI (no X-RateLimit-*, no RateLimit-*) and no 429
+    response is declared on any REST operation.
+  websocket:
+    status: 429
+    headers:
+      Retry-After: Seconds to wait before retrying.
+      X-WebSocket-Reject-Reason: Reason the connection was rejected.
+  detail: rate-limits/supra-rate-limits.yml
+
+dry_run_mode:
+  supported: true
+  mechanism: POST /rpc/v3/transactions/simulate (simulate_txn_v3), POST /rpc/v2/transactions/simulate
+  cli: supra move automation register --simulate
+  description: >-
+    A full transaction simulation returning the gas used, the VM status and the write set the transaction would
+    produce, without submitting it to consensus. Combined with GET /rpc/v3/transactions/estimate_gas_price this
+    is a genuine rehearse-before-you-act path, which matters more here than on most APIs because the real call
+    is irreversible.
+  docs: https://docs.supra.com/network/move/rest-api
+
+reversibility:
+  grade: documented
+  summary: >-
+    Supra's principal write surface is deliberately and permanently irreversible, and it says so plainly; the
+    one scheduled-execution surface (Automation / AutoFi) does have a real cancellation path, but the docs state
+    no window for it. Nothing here is graded verified because no reversal window is published anywhere.
+  write_surfaces:
+  - surface: Transaction submission
+    operations: [submit_txn_v3, submit_txn]
+    reversal_operation: null
+    window: null
+    reversible: false
+    grade: na
+    note: >-
+      A committed Supra transaction cannot be cancelled, refunded, voided or rolled back — this is the security
+      property of the chain, not a gap in the API. The compensating control is the simulate endpoint (see
+      dry_run_mode) plus sequence-number replay protection. Any economic reversal must be effected by a second,
+      opposite transaction that the counterparty must themselves authorize. An agent must treat submit as a
+      one-way door.
+  - surface: Automation task registration (AutoFi)
+    reversal_operation: >-
+      supra move automation cancel --task-index <TASK_INDEX> --rpc-url <URL>, backed by the Move entry function
+      supra_automation::automation_registry::cancel_task(owner: &signer, id: u64)
+    window: >-
+      Not stated. The documentation says only that after a successful cancel "The task is no longer active",
+      "No additional executions will occur" and "You won't be charged automation or gas fees for that task
+      anymore". It does not state a deadline, an epoch boundary, or whether already-paid automation fees are
+      refunded — so the cancellation deadline relative to the next 2-hour epoch execution is unknown from the
+      published docs.
+    reversible: true
+    grade: documented
+    docs: https://docs.supra.com/automation/your-first-automation-task/canceling-your-automation-task
+  - surface: dVRF subscription funding
+    reversal_operation: Withdraw funds from a dVRF subscription
+    window: Not stated.
+    reversible: true
+    grade: documented
+    docs: https://docs.supra.com/dvrf/build-supra-l1/deposit-and-withdraw-funds
+  - surface: Move package publication
+    reversal_operation: >-
+      Package upgrade under the package's upgrade policy (compatible / immutable). An immutable package cannot be
+      changed or removed at all.
+    window: null
+    reversible: partial
+    grade: documented
+    docs: https://docs.supra.com/network/move/move-book/basic-concepts/package-upgrades
+  agent_guidance: >-
+    Before any submit_txn_v3 call, simulate first, confirm the chain id from x-supra-chain-id, and treat success
+    as final. There is no undo.
+
+data_retention_and_pruning:
+  behavior: >-
+    Nodes prune history. Six operations declare HTTP 410 Gone with the description "Requested data has been
+    pruned and is no longer available" / "All data in the requested range has been pruned", and the
+    x-supra-oldest-block response header names the floor.
+  agent_guidance: >-
+    410 is not an error to retry — it is a permanent statement that this node no longer holds the range. Read
+    x-supra-oldest-block and re-plan, or query an archival node.
+
+cross_links:
+  authentication: authentication/supra-authentication.yml
+  errors: errors/supra-problem-types.yml
+  lifecycle: lifecycle/supra-lifecycle.yml
+  rate_limits: rate-limits/supra-rate-limits.yml
+  data_model: data-model/supra-data-model.yml

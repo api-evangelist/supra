@@ -1,0 +1,60 @@
+generated: '2026-08-29'
+method: searched
+source: >-
+  Probed https://docs.supra.com/release-notes (404), https://docs.supra.com/network/release-notes (404),
+  https://supra.com/blog/ (404); read docs.supra.com/llms.txt (242 documentation URLs — no changelog or release
+  notes page in the index), https://docs.supra.com/network/node/node-upgrade-guide-mainnet,
+  https://docs.supra.com/network/move/cli-commands, and the build metadata inside
+  openapi/supra-rpc-node-openapi.yml.
+description: >-
+  Supra publishes no dated changelog for its API. There is no release-notes page, no "what's new" section in the
+  docs, and no versioned entry list — which is why apis.yml carries no ChangeLog pointer. What version
+  information does exist is scattered across three unrelated places: the node build tag embedded in the OpenAPI
+  description string, the node versions named in operator upgrade runbooks, and a dated CLI note on the CLI
+  commands pages. An integrator cannot answer "what changed in the API last month" from any Supra surface.
+changelog_published: false
+scheme: URL path versioning (v1-v4), with the node's own build tag as the only release identifier
+current_version:
+  api_paths: [v1, v2, v3, v4]
+  node_build_tag: supra_rpc_v11.5.2
+  node_commit: 5e9ea652
+  node_build_time: '2026-08-25'
+  source: openapi info.description at https://rpc-mainnet.supra.com/docs/api.json
+  runtime_endpoint: GET /rpc/v3/version
+entries: []
+version_signals_found:
+- date: '2026-08-25'
+  kind: node build
+  version: supra_rpc_v11.5.2
+  source: OpenAPI info.description / GET /rpc/v3/version
+  note: Build timestamp of the mainnet RPC node serving the contract at probe time.
+- date: null
+  kind: node release
+  version: v9.1.10 (mainnet), 9.0.12 (testnet)
+  source: https://docs.supra.com/network/node/node-upgrade-guide-mainnet
+  note: Validator/RPC node versions named in the operator upgrade guides. Undated on the page.
+- date: null
+  kind: CLI
+  version: v0.5.0
+  source: https://docs.supra.com/network/node/node-upgrade-guide-mainnet/cli-improvements
+- date: '2025-05-02'
+  kind: CLI Docker image
+  version: v9.0.12
+  source: https://docs.supra.com/network/move/cli-commands
+  note: >-
+    "On May 2nd, 2025 a new version of the CLI was released. The new image (v9.0.12) introduced a number of
+    changes, including an improved profile feature." The only explicitly dated release note on the docs site.
+adjacent_changelogs:
+- name: Supra Move Development Skill
+  url: https://github.com/Entropy-Foundation/supra-dev-skills/blob/master/CHANGELOG.md
+  note: >-
+    A genuinely well-kept, dated changelog — but for Supra's published Claude Code Agent Skill, not for the API.
+    It is worth reading anyway: its 2.2.0 entry records that "/rpc/v1/ and /rpc/v2/ are deprecated" and that only
+    two legacy v1 endpoints remain, which is Supra stating its own deprecation posture in prose for the first
+    time.
+- name: supra-l1-sdk GitHub releases
+  url: https://github.com/Entropy-Foundation/supra-l1-sdk/releases
+  recent: [v5.0.2 2026-03-09, v5.0.1 2026-02-13, v4.6.0 2025-09-10, v4.5.0 2025-08-05]
+gap: >-
+  The API itself deprecated 19 of 56 operations without a single dated announcement anywhere a consumer would
+  look. A dated changelog is the lowest-cost artifact on this list for Supra to add.

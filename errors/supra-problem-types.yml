@@ -1,0 +1,85 @@
+generated: '2026-08-29'
+method: derived
+source: >-
+  Derived from the 4xx/5xx responses declared in openapi/supra-rpc-node-openapi.yml (rpc-mainnet.supra.com
+  /docs/api.json). Searched https://docs.supra.com for a dedicated error reference page — none exists; the
+  documentation carries no error-code table, so titles and remediation below are taken from the response
+  descriptions in the contract itself.
+description: >-
+  Error catalogue for the Supra RPC Node API. The envelope is a single-field JSON object, not RFC 9457 Problem
+  Details, and there is no machine-readable error code — HTTP status plus a prose message is the entire signal.
+  The one genuinely distinctive status here is 410 Gone, which Supra uses correctly and deliberately to say
+  "this node has pruned that history", a permanent condition a client must not retry.
+format: json
+rfc9457: false
+media_types:
+- application/json
+- application/x-bcs
+- application/octet-stream
+envelope:
+  schema: ErrResp
+  required: [message]
+  shape: '{"message": "string"}'
+problem_types:
+- status: 400
+  title: Bad Request
+  occurrences: 5
+  retryable: false
+  meanings:
+  - The specified epoch does not exist
+  - Malformed event or transaction hash provided
+  - Malformed request, batch too large, unknown transaction hash, unsupported transaction type
+  remediation: >-
+    Fix the request before retrying. Hashes must be 32-byte hex (0x-prefixed accepted); epochs must be within the
+    range the node retains; proof batches have a server-side size cap that the contract does not publish a number
+    for.
+- status: 404
+  title: Not Found
+  occurrences: 13
+  retryable: conditional
+  meanings:
+  - No block for the requested height
+  - No committee authorization found for the requested epoch
+  - No inclusion certificate is currently available on this node
+  remediation: >-
+    For a height at or beyond the chain tip, 404 is transient — the block does not exist yet and the same call
+    will succeed once it is produced. For a height below x-supra-oldest-block, expect 410 rather than 404. An
+    inclusion certificate "not currently available" may become available; poll with backoff.
+- status: 410
+  title: Gone — data pruned
+  occurrences: 6
+  retryable: false
+  meanings:
+  - Requested data has been pruned and is no longer available
+  - All data in the requested range has been pruned and is no longer available
+  remediation: >-
+    Permanent for this node. Read the x-supra-oldest-block response header to learn the retention floor and
+    either narrow the range or query an archival node. Retrying is guaranteed to fail.
+- status: 429
+  title: Too Many Requests
+  occurrences: 1
+  surface: GET /rpc/v4/ws only
+  retryable: true
+  meanings:
+  - Connection or subscription limit reached
+  headers:
+    Retry-After: Seconds to wait before retrying (integer).
+    X-WebSocket-Reject-Reason: Reason the connection was rejected.
+  remediation: Honour Retry-After. Reduce concurrent WebSocket connections or subscriptions per token.
+- status: 503
+  title: Service Unavailable
+  occurrences: 6
+  retryable: true
+  meanings:
+  - The Supra WebSocket endpoint is disabled on this node
+  - The archive is still initializing. No executed blocks are available yet
+  remediation: >-
+    "Archive still initializing" is transient — retry with backoff. "WebSocket endpoint is disabled on this node"
+    is a per-node configuration and will not clear by retrying; use a different RPC node.
+gaps:
+- No error `code` or `type` field — clients cannot branch on anything but the HTTP status and English prose.
+- No 401/403 anywhere, because the node API is keyless.
+- >-
+  No 429 on any REST operation, so a REST client has no declared contract for what happens under load; only the
+  WebSocket upgrade declares throttling.
+- No RFC 9457 application/problem+json representation is offered.

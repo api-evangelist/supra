@@ -1,0 +1,25 @@
+generated: '2026-08-29'
+method: searched
+source: https://docs.supra.com/oracles/apis-real-time-and-historical-data/price-widgets (HTTP 200)
+description: >-
+  Supra publishes one family of embeddable client-side components: price widgets for displaying live oracle
+  crypto data on a third-party website. They are distinct from the SDKs in packages/ — these render UI rather
+  than call an API on your behalf — and they are the only zero-key way to consume Supra's oracle data on a web
+  page, since the Price Feeds REST/WebSocket APIs both require a manually issued x-api-key.
+families:
+- name: Price Widgets
+  kind: embeddable widget
+  integration: HTML iframe embed
+  docs: https://docs.supra.com/oracles/apis-real-time-and-historical-data/price-widgets
+  description: >-
+    Embeddable widgets for displaying cryptocurrency data on websites. The documentation states they "can be
+    customised and be integrated using HTML iframes". Live price charts and tickers.
+  loader_library: null
+  customisation: >-
+    Documented as customisable; the specific parameter set is on the docs page and is not restated here to avoid
+    copying values that may change.
+loaders: []
+note: >-
+  No web-component library, no npm-distributed element pack, no embedded dashboard product and no hosted
+  prebuilt checkout-style surface. Supra's other user-facing surfaces (SupraScan explorer, AutoFi Assist, the
+  Data Dashboard, StarKey wallet) are hosted applications rather than components a developer embeds.

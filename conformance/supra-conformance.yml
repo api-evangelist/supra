@@ -1,0 +1,144 @@
+generated: '2026-08-29'
+method: derived
+source: >-
+  Derived from openapi/supra-rpc-node-openapi.yml plus searches of https://docs.supra.com,
+  https://docs.supra.com/audit-reports and https://supra.com/bug-bounty/. Each entry's evidence names the exact
+  contract location or page it was read from.
+description: >-
+  Cross-cutting standards conformance for Supra's published contracts. Supra is a blockchain infrastructure
+  provider, and the honest headline is that its HTTP surface conforms to very little of the general-purpose API
+  standards stack — no OAuth, no RFC 9457, no RFC 8594 — while conforming quite precisely to the standards that
+  actually govern its market, which are Move/Aptos ecosystem conventions rather than IETF RFCs.
+standards:
+- id: openapi
+  conforms: true
+  version: 3.1.0
+  evidence: >-
+    rpc-mainnet.supra.com serves a valid OpenAPI 3.1.0 document at /docs/api.json (HTTP 200, application/json,
+    147,758 bytes) describing 56 operations over 56 paths with 112 component schemas. The node renders it through
+    Stoplight Elements at /docs/.
+- id: oauth2
+  conforms: false
+  evidence: >-
+    No oauth2 securityScheme in the contract; /.well-known/oauth-authorization-server returns 404 on all five
+    probed hosts.
+- id: oidc
+  conforms: false
+  evidence: /.well-known/openid-configuration returns 404 on all five probed hosts.
+- id: rfc9457
+  conforms: false
+  evidence: >-
+    The error envelope is the ErrResp schema, an object with one required `message` string, served as
+    application/json. No application/problem+json representation, no type/title/status/detail/instance members.
+- id: rfc8594
+  conforms: false
+  evidence: >-
+    19 of 56 operations carry OpenAPI deprecated:true, but no Sunset or Deprecation response header is declared
+    on any operation and no deprecation policy page is published. Deprecation is announced in the contract and
+    nowhere else.
+- id: rfc9110-conditional-requests
+  conforms: false
+  evidence: No ETag, If-None-Match, Last-Modified or If-Modified-Since headers appear anywhere in the contract.
+- id: rfc6750-bearer
+  conforms: partial
+  evidence: >-
+    Only on the WebSocket upgrade, and only when a node operator sets websocket_auth_tokens: "clients must send
+    Authorization: Bearer <token>". Not used by the public mainnet endpoint and not a Supra-issued credential.
+- id: pagination
+  conforms: true
+  style: cursor
+  evidence: >-
+    count/start/ascending query parameters with an x-supra-cursor response header carrying the next cursor, and
+    x-supra-oldest-block naming the retention floor. Documented in the contract on the account transaction,
+    coin_transactions, fa_transactions and events endpoints.
+- id: idempotency
+  conforms: true
+  style: protocol-level sequence number
+  evidence: >-
+    Per-account monotonic sequence_number inside the signed transaction (AccountData.sequence_number, returned by
+    get_account_v3) makes transaction submission replay-safe for the life of the account. Not the Idempotency-Key
+    header pattern. See conventions/supra-conventions.yml.
+- id: json-schema
+  conforms: true
+  version: 2020-12 (via OpenAPI 3.1)
+  evidence: 112 component schemas expressed in OpenAPI 3.1's JSON Schema 2020-12 dialect.
+- id: jsonrpc-2.0
+  conforms: true
+  evidence: >-
+    GET /rpc/v4/ws upgrades to a WebSocket speaking JSON-RPC 2.0: supra_subscribe / supra_unsubscribe requests,
+    a {"jsonrpc":"2.0","result":"<subscription-id>","id":<id>} response, and
+    {"jsonrpc":"2.0","method":"supra_subscription","params":{...}} notifications — the same subscription shape
+    Ethereum JSON-RPC clients already speak, with a supra_ method prefix.
+- id: asyncapi
+  conforms: false
+  evidence: >-
+    A real event-streaming surface exists (the /rpc/v4/ws subscription stream, and the ohlc_datafeed channel on
+    wss://prod-kline-ws.supra.com) but Supra publishes no AsyncAPI document for either. The OpenAPI says so
+    explicitly: "OpenAPI documents the upgrade handshake only, not the pushed message stream."
+- id: fapi
+  conforms: false
+  evidence: Not applicable — no OAuth surface, and Supra is not a regulated open-banking participant.
+- id: scim
+  conforms: false
+  evidence: No identity provisioning surface.
+- id: odata
+  conforms: false
+  evidence: No $metadata endpoint; probed https://rpc-mainnet.supra.com/openapi.json family only.
+domain_standards:
+- id: move-vm
+  name: Move virtual machine and Move language
+  conforms: true
+  evidence: >-
+    The contract's own schemas are Move types, not bespoke ones — MoveModule, MoveModuleBytecode, MoveResource,
+    MoveValue, StructTag, TypeTag, VMStatus, Guid — and the view endpoints (view_function_v3, view_function_v2)
+    take a Move ViewRequest naming a fully qualified module::function with type_arguments. A client that already
+    speaks Move/Aptos types deserialises Supra responses with no bespoke connector.
+  note: >-
+    This is the domain standard that matters in Supra's market. Supra's node is a fork of Aptos Core
+    (github.com/Entropy-Foundation/aptos-core), and docs.supra.com ships an "Aptos to Supra Cheatsheet" naming
+    exactly where the framework prefixes diverge.
+- id: bcs
+  name: Binary Canonical Serialization
+  conforms: true
+  evidence: >-
+    Declared as a first-class wire format in the contract: request content type
+    application/x.supra.signed_transaction+bcs for transaction submission, and application/x-bcs response
+    representations across the read endpoints. BCS is the canonical Diem/Aptos/Sui serialization, so BCS bytes
+    from Supra hash and verify with existing ecosystem tooling.
+- id: ed25519
+  name: Ed25519 transaction signatures
+  conforms: true
+  evidence: SignedTransaction / SignerData / ValidatorPublicKeys schemas in the contract.
+- id: caip
+  name: CAIP (Chain Agnostic Improvement Proposals) namespaces
+  conforms: partial
+  evidence: >-
+    Entropy-Foundation maintains a fork of the chain-agnostic `namespaces` repository
+    (github.com/Entropy-Foundation/namespaces), which is how a chain registers its CAIP-2 namespace profile.
+    Not asserted from the HTTP contract.
+- id: jsonrpc-eth-subscription-shape
+  name: Ethereum-style JSON-RPC pub/sub
+  conforms: true
+  evidence: >-
+    supra_subscribe("newBlocks"|"newBlockHeaders") / supra_unsubscribe mirror eth_subscribe/eth_unsubscribe, so
+    an existing web3 subscription client needs only a method-prefix change.
+security_and_compliance:
+  certifications_published: []
+  soc2: false
+  iso27001: false
+  note: >-
+    Supra publishes no SOC 2, ISO 27001, PCI or similar attestation, which is normal for a Layer 1 protocol
+    rather than a gap in this class of provider. What it does publish is third-party smart-contract security
+    audits and a bug bounty — see security/supra-vulnerability-disclosure.yml. No Compliance pointer is emitted
+    in apis.yml, because no compliance certification is published.
+  third_party_audits:
+    published: true
+    url: https://docs.supra.com/audit-reports
+    firms: [RektProof, QuillAudits]
+    scope: >-
+      dVRF (Pull VRF 1.0/2.0/2.1, Solidity, Move and Rust), Supra Oracles DORA 1.0/1.1/2.0 (Solidity, Aptos Move,
+      Sui Move, Radix, CosmWasm), PoEL/iAssets, SupraNova Move and Solidity contracts, and the StarKey wallet
+      web extension and mobile app.
+    note: >-
+      Reports are linked as Google Drive documents from the docs page rather than hosted on a Supra domain, and
+      the page publishes no audit dates.

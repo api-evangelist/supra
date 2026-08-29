@@ -1,0 +1,153 @@
+generated: '2026-08-29'
+method: derived
+source: >-
+  Deprecated operations and version scheme derived from openapi/supra-rpc-node-openapi.yml
+  (rpc-mainnet.supra.com/docs/api.json, build tag supra_rpc_v11.5.2, build_time 2026-08-25). Status page and
+  deprecation policy searched on supra.com and docs.supra.com; node upgrade guides read from
+  https://docs.supra.com/network/node/node-upgrade-guide-mainnet.
+description: >-
+  Versioning, deprecation and operational-transparency posture for the Supra RPC Node API. Supra does something
+  unusually good here and something unusually weak. The good part: it marks deprecation in the contract itself —
+  19 of 56 operations carry deprecated:true, so a client generator or an agent can see the decay without reading
+  a blog post. The weak part: there is no sunset date, no Deprecation or Sunset response header, no published
+  deprecation policy, no dated API changelog, and no working public status page.
+versioning:
+  scheme: URL path versioning
+  mechanism: /rpc/v{n}/ prefix
+  live_versions: [v1, v2, v3, v4]
+  current: v4
+  recommended: v3 for breadth, v4 for proofs, inclusion certificates and streaming
+  node_build:
+    tag: supra_rpc_v11.5.2
+    commit: 5e9ea652
+    build_time: '2026-08-25'
+    source: openapi info.description
+    note: >-
+      The node's own build tag is the closest thing Supra publishes to an API release identifier, and it is only
+      discoverable inside the OpenAPI description string or via GET /rpc/v3/version.
+  version_endpoint: GET /rpc/v3/version (version_info_v3)
+deprecation:
+  policy_published: false
+  sunset_header: false
+  deprecation_header: false
+  policy_url: null
+  note: >-
+    No RFC 8594 Sunset or Deprecation response headers are declared anywhere in the contract, and no removal date
+    is published for any deprecated operation. Deprecation is signalled only by the OpenAPI deprecated flag.
+  deprecated_operation_count: 19
+  total_operation_count: 56
+  deprecated_operations:
+  - operationId: submit_txn
+    method: POST
+    path: '/rpc/v1/transactions/submit'
+    replacement: submit_txn_v3
+  - operationId: faucet_transaction_by_hash_v1
+    method: GET
+    path: '/rpc/v1/wallet/faucet/transactions/{hash}'
+    replacement: faucet_v2
+  - operationId: get_account_v2
+    method: GET
+    path: '/rpc/v2/accounts/{address}'
+    replacement: get_account_v3
+  - operationId: coin_transactions_v2
+    method: GET
+    path: '/rpc/v2/accounts/{address}/coin_transactions'
+    replacement: coin_transactions_v3
+  - operationId: get_account_modules_v2
+    method: GET
+    path: '/rpc/v2/accounts/{address}/modules'
+    replacement: get_account_modules_v3
+  - operationId: get_account_module_v2
+    method: GET
+    path: '/rpc/v2/accounts/{address}/modules/{module_name}'
+    replacement: get_account_module_v3
+  - operationId: get_account_resources_v2
+    method: GET
+    path: '/rpc/v2/accounts/{address}/resources'
+    replacement: get_account_resources_v3
+  - operationId: get_account_resource_v2
+    method: GET
+    path: '/rpc/v2/accounts/{address}/resources/{resource_type}'
+    replacement: get_account_resource_v3
+  - operationId: get_account_transactions_v2
+    method: GET
+    path: '/rpc/v2/accounts/{address}/transactions'
+    replacement: get_account_transactions_v3
+  - operationId: latest_block_v2
+    method: GET
+    path: '/rpc/v2/block'
+    replacement: latest_block_v3
+  - operationId: block_by_height_v2
+    method: GET
+    path: '/rpc/v2/block/height/{height}'
+    replacement: block_by_height_v4
+  - operationId: block_header_info_v2
+    method: GET
+    path: '/rpc/v2/block/{block_hash}'
+    replacement: block_info_by_hash_v3
+  - operationId: latest_consensus_block_v2
+    method: GET
+    path: '/rpc/v2/consensus/block'
+    replacement: latest_consensus_block_v4
+  - operationId: consensus_block_v2
+    method: GET
+    path: '/rpc/v2/consensus/block/height/{height}'
+    replacement: consensus_block_v4
+  - operationId: committee_authorization_v2
+    method: GET
+    path: '/rpc/v2/consensus/committee_authorization/{epoch}'
+    replacement: committee_authorization_v4
+  - operationId: estimate_gas_price_v2
+    method: GET
+    path: '/rpc/v2/transactions/estimate_gas_price'
+    replacement: estimate_gas_price_v3
+  - operationId: simulate_txn_v2
+    method: POST
+    path: '/rpc/v2/transactions/simulate'
+    replacement: simulate_txn_v3
+  - operationId: transaction_by_hash_v2
+    method: GET
+    path: '/rpc/v2/transactions/{hash}'
+    replacement: transaction_by_hash_v4
+  - operationId: view_function_v2
+    method: POST
+    path: '/rpc/v2/view'
+    replacement: view_function_v3
+  surviving_v1_operations:
+  - operationId: chain_id
+    path: /rpc/v1/transactions/chain_id
+    deprecated: false
+  - operationId: transaction_parameter
+    path: /rpc/v1/transactions/parameters
+    deprecated: false
+  - operationId: faucet_v1
+    path: '/rpc/v1/wallet/faucet/{address}'
+    deprecated: false
+status_page:
+  published: false
+  probed: https://status.supra.com/
+  status: 302
+  redirects_to: https://uptime.betterstack.com?unpublished-status-page=true
+  note: >-
+    status.supra.com resolves and is wired to Better Stack, but the status page has never been published — the
+    redirect target literally carries unpublished-status-page=true. There is a DNS record and a vendor account
+    and no page behind them. No StatusPage pointer is emitted in apis.yml.
+changelog:
+  api_changelog_published: false
+  probed:
+  - url: https://docs.supra.com/release-notes
+    status: 404
+  - url: https://docs.supra.com/network/release-notes
+    status: 404
+  note: >-
+    No dated API changelog. Node upgrade guides at docs.supra.com/network/node/node-upgrade-guide-mainnet name
+    specific node versions (v9.1.10 mainnet, 9.0.12 testnet) and CLI v0.5.0, and the CLI Commands pages date a
+    CLI release to 2025-05-02, but these are operator runbooks rather than an API change log.
+  detail: changelog/supra-changelog.yml
+sla:
+  published: false
+  note: No SLA, uptime commitment or support-response commitment is published for the public RPC endpoints.
+data_retention:
+  behavior: Nodes prune history and answer 410 Gone for pruned ranges.
+  discovery_header: x-supra-oldest-block
+  note: Retention depth is a per-node operator setting; Supra publishes no retention guarantee for the public endpoint.

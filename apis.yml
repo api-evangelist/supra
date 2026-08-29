@@ -1,23 +1,194 @@
 aid: supra
 name: Supra
-description: 'Supra is a company surfaced via the API Evangelist harvest backlog (source: secondary-market)
-  and added to the network as a stub for full-pipeline profiling.'
+description: >-
+  Supra is a vertically integrated Layer 1 blockchain developed by the Swiss-based Entropy Foundation, combining a
+  MultiVM execution layer (MoveVM plus an EVM) with services that most chains outsource: DORA native oracle price
+  feeds (push and pull), decentralized verifiable randomness (dVRF), protocol-level automation (AutoFi), on-chain
+  technical indicators and indices, and the SupraNova / HyperNova cross-chain bridge. Developers reach the network
+  through a public, keyless REST + JSON node API at rpc-mainnet.supra.com that publishes a live OpenAPI 3.1
+  description covering 56 operations across accounts, transactions, blocks, events, view functions, tables and
+  inclusion proofs, plus a JSON-RPC WebSocket subscription stream for newly committed blocks. Market data is served
+  separately by an API-key-gated Price Feeds REST and WebSocket API for real-time and historical OHLC data. Supra
+  is headquartered in Miami, Florida and was founded in 2019.
 url: https://raw.githubusercontent.com/api-evangelist/supra/refs/heads/main/apis.yml
+image: https://prod-assets.cerberus.supra.com/spa-assets/og-images/og-homepage.png
 x-type: company
 x-source: harvest:secondary-market
-x-tier: stub
-x-tier-reason: harvest
 specificationVersion: '0.20'
 created: '2026-08-29'
 modified: '2026-08-29'
 tags:
-- Company
-apis: []
+- Blockchain
+- Layer 1
+- Oracles
+- Web3
+- Market Data
+- Smart Contracts
+- Verifiable Randomness
+- Cross-Chain Bridge
+- Automation
+- Move
+- Cryptocurrency
+- DeFi
+apis:
+- name: Supra RPC Node API
+  description: >-
+    Public, keyless REST + JSON API served by every Supra RPC node. Covers accounts (resources, modules, coin and
+    fungible-asset statements), transaction submission and simulation, gas price estimation, blocks and consensus
+    blocks, events, Move view function execution, table item lookup, committee authorizations and event-emission /
+    transaction-inclusion proofs, across four coexisting path versions (v1 through v4). Also exposes a JSON-RPC
+    WebSocket upgrade at /rpc/v4/ws for newBlocks and newBlockHeaders subscriptions. Described by an OpenAPI 3.1.0
+    document the node itself serves at /docs/api.json.
+  humanURL: https://docs.supra.com/network/move/rest-api
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - Blockchain
+  - Layer 1
+  - Smart Contracts
+  - Move
+  - Web3
+  properties:
+  - type: OpenAPI
+    url: openapi/supra-rpc-node-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Overlay
+    url: overlays/supra-rpc-node-overlay.yaml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
+- name: Supra Price Feeds REST API
+  description: >-
+    Oracle market-data REST API returning the latest price for a trading pair and historical OHLC candles for up to
+    one month, on the DORA data feeds Supra publishes on-chain. Two documented endpoints, GET /latest and
+    GET /history. Requires an x-api-key header; keys are issued by request form, and the surface is documented as
+    Early Access.
+  humanURL: https://docs.supra.com/oracles/apis-real-time-and-historical-data/rest-api
+  baseURL: https://prod-kline-rest.supra.com
+  tags:
+  - Oracles
+  - Market Data
+  - Cryptocurrency
+  - Web3
+  properties:
+  - type: Documentation
+    url: https://docs.supra.com/oracles/apis-real-time-and-historical-data/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: SignUp
+    url: https://docs.google.com/forms/d/e/1FAIpQLSfHZr8BHLTY8q_MjbuKZPpdgQS0oGmRIrsn9H-HrieH9eQjFw/viewform
+- name: Supra Price Feeds WebSocket API
+  description: >-
+    Streaming oracle market-data API. Clients open a WebSocket to wss://prod-kline-ws.supra.com with an x-api-key
+    header and send a subscribe action naming the ohlc_datafeed channel, a resolution in minutes, and a list of
+    trading pairs; the server pushes an OHLC update each interval.
+  humanURL: https://docs.supra.com/oracles/apis-real-time-and-historical-data/websocket-api
+  baseURL: wss://prod-kline-ws.supra.com
+  tags:
+  - Oracles
+  - Market Data
+  - Cryptocurrency
+  - Web3
+  properties:
+  - type: Documentation
+    url: https://docs.supra.com/oracles/apis-real-time-and-historical-data/websocket-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+- name: Supra Automation API
+  description: >-
+    Read and observation surface for Supra's native on-chain automation (AutoFi) registry. Automation tasks are
+    registered and cancelled through the Supra CLI and Move entry functions rather than an HTTP write endpoint;
+    execution is observed through the node RPC using the automated_transactions account endpoint and the
+    type=auto block filter, and registry state is read through Move view functions.
+  humanURL: https://docs.supra.com/automation/api-reference
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - Automation
+  - Blockchain
+  - Smart Contracts
+  - Move
+  properties:
+  - type: Documentation
+    url: https://docs.supra.com/automation/api-reference
+  - type: OpenAPI
+    url: openapi/supra-rpc-node-openapi.yml
+common:
+- type: Website
+  url: https://supra.com/
+- type: DeveloperPortal
+  url: https://supra.com/developers/
+- type: Documentation
+  url: https://docs.supra.com/
+- type: APIReference
+  url: https://rpc-mainnet.supra.com/docs/
+- type: GettingStarted
+  url: https://docs.supra.com/network/move/getting-started
+- type: Support
+  url: https://forum.supra.com/
+- type: Blog
+  url: https://supra.com/news/
+- type: GitHubOrganization
+  url: https://github.com/Entropy-Foundation
+- type: TermsOfService
+  url: https://supra.com/terms-of-use/
+- type: PrivacyPolicy
+  url: https://supra.com/privacy-policy/
+- type: LLMsTxt
+  url: llms/supra-llms.txt
+- type: LLMsTxt
+  url: https://docs.supra.com/llms.txt
+- type: Authentication
+  url: authentication/supra-authentication.yml
+- type: Conventions
+  url: conventions/supra-conventions.yml
+- type: Idempotency
+  url: conventions/supra-conventions.yml
+- type: Lifecycle
+  url: lifecycle/supra-lifecycle.yml
+- type: ErrorCatalog
+  url: errors/supra-problem-types.yml
+- type: DataModel
+  url: data-model/supra-data-model.yml
+- type: Conformance
+  url: conformance/supra-conformance.yml
+- type: Packages
+  url: packages/supra-packages.yml
+- type: SDKs
+  url: packages/supra-packages.yml
+- type: CLI
+  url: cli/supra-cli.yml
+- type: Components
+  url: components/supra-components.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: RateLimits
+  url: rate-limits/supra-rate-limits.yml
+- type: Plans
+  url: plans/supra-plans-pricing.yml
+- type: Sandbox
+  url: sandbox/supra-sandbox.yml
+- type: DomainSecurity
+  url: security/supra-domain-security.yml
+- type: VulnerabilityDisclosure
+  url: security/supra-vulnerability-disclosure.yml
+- type: Security
+  url: security/supra-vulnerability-disclosure.yml
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
-common:
-- type: Website
-  url: https://www.nasdaqprivatemarket.com/
+x-enrichment:
+  date: '2026-08-29'
+  status: enriched
+  artifacts_added: 27
+  pass: local-v1

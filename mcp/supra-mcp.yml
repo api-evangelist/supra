@@ -1,0 +1,104 @@
+generated: '2026-08-29'
+method: derived
+source: >-
+  Derived from openapi/supra-rpc-node-openapi.yml (the OpenAPI 3.1.0 document rpc-mainnet.supra.com serves at
+  /docs/api.json). Searched first: web search for a Supra MCP server, the Entropy-Foundation GitHub organization
+  (61 public repositories listed, none MCP), https://supra.com/developers/, and docs.supra.com/llms.txt (242
+  documentation URLs, no MCP page). Supra publishes an "AI Agents" documentation section
+  (https://docs.supra.com/ai-agents) that teaches building an agent against the SDK with ts-node — it is not an
+  MCP server and exposes no endpoint.
+description: >-
+  Supra ships no MCP server, hosted or local. This is a CANDIDATE tool list derived from the public, keyless
+  Supra RPC Node API so an agent operator can see what a Supra MCP server would expose. Nothing here is
+  published by Supra and no endpoint is asserted.
+status: candidate
+deployment:
+  mode: none
+  endpoint: null
+  install: null
+  package: null
+  auth: none
+  verified: derived
+  note: >-
+    No remote MCP endpoint and no stdio package exist. The underlying REST API is itself keyless and public, so
+    a derived server would need no credentials for read operations; transaction submission is authenticated by
+    the signed transaction payload, not by a server credential.
+candidate_tools:
+- name: supra_get_account
+  rest: get_account_v3
+  description: Get sequence number and authentication key for an account address.
+- name: supra_get_account_resources
+  rest: get_account_resources_v3
+  description: List the Move resources held at an account address.
+- name: supra_get_account_resource
+  rest: get_account_resource_v3
+  description: Read one Move resource by fully qualified resource type.
+- name: supra_get_account_modules
+  rest: get_account_modules_v3
+  description: List the Move modules published under an account.
+- name: supra_get_account_module
+  rest: get_account_module_v3
+  description: Fetch one published Move module's bytecode and ABI by name.
+- name: supra_get_account_transactions
+  rest: get_account_transactions_v3
+  description: Paginated transaction history for an account.
+- name: supra_get_account_coin_transactions
+  rest: coin_transactions_v3
+  description: Coin transfer statements for an account.
+- name: supra_get_account_fa_transactions
+  rest: fa_transactions_v3
+  description: Fungible Asset transfer statements for an account.
+- name: supra_get_account_automated_transactions
+  rest: statement_automated_v3
+  description: Automation-executed transactions attributed to an account (AutoFi).
+- name: supra_get_latest_block
+  rest: latest_block_v3
+  description: Fetch the most recently executed block.
+- name: supra_get_block_by_height
+  rest: block_by_height_v4
+  description: Fetch a block by height.
+- name: supra_get_block_by_hash
+  rest: block_info_by_hash_v3
+  description: Fetch a block by hash.
+- name: supra_get_block_transactions
+  rest: txs_by_block_v3
+  description: List the transactions contained in a block.
+- name: supra_get_transaction
+  rest: transaction_by_hash_v4
+  description: Look up a transaction and its execution output by hash.
+- name: supra_submit_transaction
+  rest: submit_txn_v3
+  description: Submit a signed transaction. WRITE — irreversible once committed.
+- name: supra_simulate_transaction
+  rest: simulate_txn_v3
+  description: Dry-run a transaction and return the gas and effects without submitting it.
+- name: supra_estimate_gas_price
+  rest: estimate_gas_price_v3
+  description: Current gas price estimate.
+- name: supra_get_chain_id
+  rest: chain_id
+  description: Return the chain id (8 on mainnet, 6 on testnet).
+- name: supra_get_transaction_parameters
+  rest: transaction_parameter
+  description: Return the network's current transaction parameters (max gas, expiry bounds).
+- name: supra_view
+  rest: view_function_v3
+  description: Execute a read-only Move view function and return its result.
+- name: supra_get_table_item
+  rest: table_item_by_key
+  description: Read a Move table item by handle and key.
+- name: supra_get_events_by_type
+  rest: events_by_type_v4
+  description: Query emitted events by fully qualified event type.
+- name: supra_get_event_emission_proof
+  rest: proofs_event_emission_proof_v4
+  description: Fetch a cryptographic proof that a given event was emitted by a given transaction.
+- name: supra_get_inclusion_certificates
+  rest: transactions_inclusion_certificates_by_block_height_v4
+  description: Transaction inclusion certificates anchored at a block height.
+- name: supra_get_version
+  rest: version_info_v3
+  description: Node build information (tag, commit hash, build time).
+- name: supra_faucet
+  rest: faucet_v1
+  description: Testnet only — request test SUPRA for an address.

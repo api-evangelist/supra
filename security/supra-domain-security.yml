@@ -1,0 +1,28 @@
+generated: '2026-08-29'
+method: probed
+source: live DNS/TLS/HTTP probes of apis.yml + OpenAPI hosts
+hosts:
+- host: supra.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Nov 23 18:12:49 2026 GMT
+  hsts: true
+  hsts_max_age: 31536000
+- host: docs.supra.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Nov 14 21:12:04 2026 GMT
+  hsts: true
+  hsts_max_age: 31536000
+- host: rpc-mainnet.supra.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Nov  1 15:18:38 2026 GMT
+  hsts: null
+domains:
+- domain: supra.com
+  dnssec: false
+  caa: []
+  spf: true
+  dmarc: true
+  dmarc_policy: quarantine

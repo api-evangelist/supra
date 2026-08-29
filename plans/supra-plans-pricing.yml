@@ -1,0 +1,47 @@
+generated: '2026-08-29'
+method: searched
+source: >-
+  https://supra.com/pricing/ (HTTP 404 — no pricing page exists), https://supra.com/ navigation (no Pricing
+  item), https://docs.supra.com/oracles/apis-real-time-and-historical-data/rest-api (Early Access, key by
+  request form), https://docs.supra.com/supranova/fee-structure,
+  https://docs.supra.com/dvrf/build-third-party-evm-networks/vrf-subscription-model and
+  https://docs.supra.com/automation/your-first-automation-task/calculate-task-expiry-time-and-task-automation-fee.
+description: >-
+  Supra publishes no API plans, no priced tiers and no pricing page. It is not a SaaS API business: the node RPC
+  is free and permissionless, the oracle Price Feeds API is Early Access with keys issued by hand through a
+  Google Form and no price attached, and everything that does cost money is metered on-chain in the $SUPRA token
+  as gas, automation fees or prepaid dVRF subscription deposits rather than billed as a subscription. Recorded
+  as plan_count: 0 — an honest zero, not a missing measurement.
+plan_count: 0
+plans: []
+pricing_page: null
+pricing_page_probe:
+  url: https://supra.com/pricing/
+  status: 404
+economic_model:
+- surface: Supra RPC Node API
+  cost_to_call: free
+  note: >-
+    Public, keyless, no account. Reads cost nothing. Writes cost network gas, paid in $SUPRA by the account
+    signing the transaction — GET /rpc/v3/transactions/estimate_gas_price returns the current estimate.
+- surface: Supra Price Feeds REST + WebSocket API
+  cost_to_call: not published
+  note: >-
+    Access is gated by a manually issued x-api-key requested through a Google Form. No price, quota or tier is
+    published, and the docs label the surface Early Access.
+  signup: https://docs.google.com/forms/d/e/1FAIpQLSfHZr8BHLTY8q_MjbuKZPpdgQS0oGmRIrsn9H-HrieH9eQjFw/viewform
+- surface: dVRF (verifiable randomness)
+  cost_to_call: prepaid on-chain subscription
+  note: >-
+    A whitelisted subscription funded with a deposit that covers callback gas; consumers deposit and withdraw
+    funds against it. Supra documents the mechanism but publishes no rate card.
+  docs: https://docs.supra.com/dvrf/build-third-party-evm-networks/vrf-subscription-model
+- surface: Automation (AutoFi)
+  cost_to_call: per-task automation fee plus gas, capped by the registrant
+  note: >-
+    Registration takes --task-max-gas-amount, --task-gas-price-cap and --task-automation-fee-cap; the fee is
+    computed against epoch duration rather than quoted as a plan price.
+  docs: https://docs.supra.com/automation/your-first-automation-task/calculate-task-expiry-time-and-task-automation-fee
+- surface: SupraNova bridge
+  cost_to_call: protocol fee
+  docs: https://docs.supra.com/supranova/fee-structure

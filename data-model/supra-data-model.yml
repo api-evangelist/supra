@@ -1,0 +1,154 @@
+generated: '2026-08-29'
+method: derived
+source: >-
+  Derived programmatically from the 112 component schemas and their $ref graph in
+  openapi/supra-rpc-node-openapi.yml (rpc-mainnet.supra.com/docs/api.json). Entity descriptions cross-checked
+  against https://docs.supra.com/network/move/rest-api and the Move type documentation at
+  https://docs.supra.com/network/move/move-book.
+description: >-
+  The entity-relationship graph of the Supra RPC Node API. The shape is not the usual SaaS object model: the
+  root entity is a Block, everything hangs off it by containment rather than by foreign key, and the "id" that
+  binds records together is a content hash rather than an opaque vendor id. The genuinely distinctive part is
+  the proof layer — TransactionInclusionProof and EventEmissionProof are first-class entities in the contract,
+  so a consumer can verify a record against a Merkle root instead of trusting the response.
+identifier_conventions:
+  primary_key: content hash (Hash), 32-byte hex, 0x-prefixed
+  account_key: AccountAddress / Address — 256-bit address, "with or without a 0x prefix"
+  ordering_key: >-
+    block height (u64) for blocks; per-account sequence_number (u64) for transactions; a derived cursor
+    (block timestamp + intra-block index) for coin and fungible-asset statements
+  no_opaque_ids: >-
+    There are no vendor-issued prefixed ids (no acct_, txn_). Every identifier is either an address, a hash, or
+    a monotonic counter — all derivable client-side, which is why the API needs no id-minting endpoint.
+entities:
+- name: Block
+  schemas: [BlockV4, BlockV3, Block, BlockInfo, ExecutedBlockInfo]
+  description: The root record. A committed block of transactions at a height, identified by hash.
+  relationships:
+  - {predicate: has_one, target: BlockHeaderInfo, via: header}
+  - {predicate: has_many, target: TransactionInfoV4, via: transactions}
+  - {predicate: has_many, target: BlockMetadataInfoV4, via: transactions}
+  - {predicate: has_many, target: AutomationRecordInfoV4, via: transactions}
+  operations: [latest_block_v3, block_by_height_v4, block_info_by_hash_v3, txs_by_block_v3]
+- name: BlockHeader
+  schemas: [BlockHeaderInfo, BlockHeader, BlockMetadataInfoV3, BlockMetadataInfoV4]
+  description: Height, hash, parent hash, author and timestamp — the block without its payload.
+  relationships:
+  - {predicate: belongs_to, target: Identity, via: author}
+  - {predicate: has_one, target: Hash, via: hash}
+  - {predicate: belongs_to, target: Hash, via: parent}
+  - {predicate: has_one, target: SmrTimestamp, via: timestamp}
+  - {predicate: has_one, target: View, via: view}
+- name: Transaction
+  schemas: [TransactionV4, TransactionInfoV4, TransactionInfoV2, TransactionInfoV1, TransactionV3]
+  description: >-
+    A single executed transaction. TransactionV4 is a tagged union over user transactions, block-metadata
+    transactions and automation records — the last of these is how AutoFi executions appear in history.
+  relationships:
+  - {predicate: belongs_to, target: BlockHeaderInfo, via: block_header}
+  - {predicate: has_one, target: Hash, via: hash}
+  - {predicate: has_one, target: SmrTransactionHeader, via: header}
+  - {predicate: has_one, target: TransactionOutputV4, via: output}
+  - {predicate: has_one, target: TxExecutionStatus, via: status}
+  - {predicate: has_one, target: TransactionInclusionProof, via: inclusion_proof}
+  operations: [transaction_by_hash_v4, transaction_by_hash_v3, submit_txn_v3, simulate_txn_v3]
+- name: SubmittedTransaction
+  schemas: [SupraTransaction, SignedTransaction, SignedSmrTransaction, UnsignedSmrTransaction, SignerData]
+  description: The request-side shape. A tagged union over Move and SMR transaction families.
+  relationships:
+  - {predicate: has_one, target: SignedSmrTransaction, via: Smr}
+  - {predicate: has_one, target: SignedTransaction, via: Move}
+- name: TransactionOutput
+  schemas: [TransactionOutputV4, MoveTransactionOutputV4, TransactionOutputV1, MoveTransactionOutputV1, EvmTransactionOutput]
+  description: >-
+    Execution result, keyed by VM. The union arms — Move, Evm, Oracle, Dkg — are the clearest single piece of
+    evidence in the contract that Supra is a MultiVM chain with oracle and DKG transactions as first-class types.
+  relationships:
+  - {predicate: has_one, target: MoveTransactionOutputV4, via: Move}
+  - {predicate: has_one, target: EvmTransactionOutput, via: Evm}
+  - {predicate: has_one, target: TxExecutionStatus, via: Oracle}
+  - {predicate: has_one, target: TxExecutionStatus, via: Dkg}
+  - {predicate: has_many, target: EventV2, via: events}
+- name: Account
+  schemas: [AccountData, AccountAddress, Address]
+  description: sequence_number plus authentication_key. Deliberately thin — an account is a slot, and its state lives in the resources published under it.
+  relationships:
+  - {predicate: has_one, target: Hash, via: authentication_key}
+  - {predicate: has_many, target: MoveResource, via: resources endpoint}
+  - {predicate: has_many, target: MoveModuleBytecode, via: modules endpoint}
+  - {predicate: has_many, target: TransactionInfoV4, via: transactions endpoint}
+  operations: [get_account_v3, get_account_resources_v3, get_account_modules_v3, get_account_transactions_v3]
+- name: MoveResource
+  schemas: [MoveResource, MoveResourceList, MoveResourcesResponse, StructTag, TypeTag, MoveValue]
+  description: A typed struct stored at an account address. The unit of on-chain state.
+  relationships:
+  - {predicate: has_many, target: MoveResource, via: resources}
+  - {predicate: belongs_to, target: StructTag, via: type}
+- name: MoveModule
+  schemas: [MoveModule, MoveModuleBytecode, MoveModuleList, MoveModuleListV2]
+  description: Published Move bytecode plus its ABI — the contract-of-the-contract for on-chain code.
+  relationships:
+  - {predicate: has_one, target: MoveModule, via: abi}
+  - {predicate: has_many, target: MoveModuleBytecode, via: modules}
+- name: Event
+  schemas: [EventV2, EventV1, EventWithContextV3, EventWithContextV4, EventsV4, EventsV3, EventsV1, Guid]
+  description: An emitted Move event, queryable by fully qualified type.
+  relationships:
+  - {predicate: has_one, target: EventV2, via: event}
+  - {predicate: belongs_to, target: Hash, via: transaction_hash}
+  - {predicate: has_one, target: TransactionInclusionAndEventEmissionProof, via: proofs}
+  operations: [events_by_type_v4, events_by_type_v3]
+- name: Proof
+  schemas: [TransactionInclusionProof, EventEmissionProof, EventEmissionProofEntry, AccumulatorProof, TransactionInclusionAndEventEmissionProof, EventEmissionProofsBatchRequest, EventEmissionProofsBatchResponse]
+  description: >-
+    Merkle inclusion and emission proofs. A consumer can prove that a transaction was included in a certified
+    block, or that a specific event was emitted by a specific transaction, without trusting the node that
+    served it.
+  relationships:
+  - {predicate: has_one, target: AccumulatorProof, via: proof}
+  - {predicate: has_one, target: Hash, via: merkle_root_hash_value}
+  - {predicate: has_one, target: Hash, via: leaf_hash_value}
+  operations: [proofs_events_v4, proofs_event_emission_proof_v4, event_emission_proof_v4]
+- name: Consensus
+  schemas: [ConsensusBlock, CertifiedBlock, CommitteeAuthorization, AuthorizedCommittee, CommitteeInfo, CommitteeV0, CommitteeV1, ValidatorV0, ValidatorV1, ValidatorPublicKeys, SmrQC, BlockVoteInfo, EpochInfo, EpochId]
+  description: >-
+    The validator-facing layer — certified blocks, quorum certificates, committee authorizations per epoch and
+    validator public keys. Most chains do not expose this over HTTP at all.
+  relationships:
+  - {predicate: has_one, target: CertifiedBlock, via: block}
+  - {predicate: has_one, target: Certificate_CommitteeInfo, via: certificate}
+  - {predicate: has_many, target: Certificate_TransactionsInclusionCertificationData, via: certificates}
+  operations: [latest_consensus_block_v4, consensus_block_v4, committee_authorization_v4, committees_v4]
+- name: Statement
+  schemas: [AccountStatementV3, AccountStatementV2, AccountStatementV1, AccountCoinStatementV2, AccountCoinStatementV1]
+  description: >-
+    Paginated coin and fungible-asset movement history for an account — the closest thing in the API to a
+    conventional ledger listing, and the surface that uses the derived cursor rather than sequence numbers.
+  operations: [coin_transactions_v3, fa_transactions_v3, statement_automated_v3]
+- name: View
+  schemas: [ViewRequest, View, MoveValue, MoveValueResponseV2, MoveValueResponseV1, MoveList]
+  description: Read-only Move function execution — a fully qualified module::function plus type_arguments and arguments, returning MoveValues.
+  operations: [view_function_v3, view_function_v2]
+- name: Table
+  schemas: [TableItemRequest]
+  description: Direct read of a Move table item by handle and key, for state too large to return as a resource.
+  operations: [table_item_by_key]
+- name: NetworkParameters
+  schemas: [TransactionParameters, GasPriceResV3, GasPriceResV2, GasPriceRes, VersionInfo, FaucetStatus, Vm, VMStatus]
+  description: Chain id, transaction parameter bounds, current gas price estimate, node build info and faucet status.
+  operations: [chain_id, transaction_parameter, estimate_gas_price_v3, version_info_v3, faucet_v1]
+- name: Error
+  schemas: [ErrResp]
+  description: One required `message` string. See errors/supra-problem-types.yml.
+graph_notes:
+- >-
+  Containment, not foreign keys. Block has_many Transaction; Transaction has_one TransactionOutput has_many
+  Event. There is no join surface and no include/expand parameter — you either fetch the block or you fetch
+  the transaction.
+- >-
+  Version drift is visible in the schema names themselves: AccountStatementV1/V2/V3, TransactionInfoV1/V2/V4,
+  EventsV1/V3/V4, GasPriceRes/V2/V3, CommitteeV0/V1. A generated client will carry all of them, and the naming
+  is the only signal of which pairs with which path version.
+- >-
+  Tagged unions carry the MultiVM story: TransactionOutputV4 branches on Move / Evm / Oracle / Dkg, and
+  SupraTransaction branches on Move / Smr.
