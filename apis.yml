@@ -11,6 +11,20 @@ description: >-
   separately by an API-key-gated Price Feeds REST and WebSocket API for real-time and historical OHLC data. Supra
   is headquartered in Miami, Florida and was founded in 2019.
 url: https://raw.githubusercontent.com/api-evangelist/supra/refs/heads/main/apis.yml
+accessModel:
+  pricing: unknown
+  onboarding: unknown
+  trial: false
+  try_now: false
+  public: false
+  label: Unknown
+  confidence: low
+  source:
+  - authentication
+  - security
+  - sandbox
+  generated: '2026-09-03'
+  method: derived
 image: https://prod-assets.cerberus.supra.com/spa-assets/og-images/og-homepage.png
 x-type: company
 x-source: harvest:secondary-market
