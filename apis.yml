@@ -45,47 +45,12 @@ tags:
 - Cryptocurrency
 - DeFi
 apis:
-- name: Supra RPC Node API
-  description: >-
-    Public, keyless REST + JSON API served by every Supra RPC node. Covers accounts (resources, modules, coin and
-    fungible-asset statements), transaction submission and simulation, gas price estimation, blocks and consensus
-    blocks, events, Move view function execution, table item lookup, committee authorizations and event-emission /
-    transaction-inclusion proofs, across four coexisting path versions (v1 through v4). Also exposes a JSON-RPC
-    WebSocket upgrade at /rpc/v4/ws for newBlocks and newBlockHeaders subscriptions. Described by an OpenAPI 3.1.0
-    document the node itself serves at /docs/api.json.
-  humanURL: https://docs.supra.com/network/move/rest-api
-  baseURL: https://rpc-mainnet.supra.com
-  tags:
-  - Blockchain
-  - Layer 1
-  - Smart Contracts
-  - Move
-  - Web3
-  properties:
-  - type: OpenAPI
-    url: openapi/supra-rpc-node-openapi.yml
-  - type: APIReference
-    url: https://rpc-mainnet.supra.com/docs/
-  - type: Documentation
-    url: https://docs.supra.com/network/move/rest-api
-  - type: Authentication
-    url: authentication/supra-authentication.yml
-  - type: Conventions
-    url: conventions/supra-conventions.yml
-  - type: ErrorCatalog
-    url: errors/supra-problem-types.yml
-  - type: DataModel
-    url: data-model/supra-data-model.yml
-  - type: Overlay
-    url: overlays/supra-rpc-node-overlay.yaml
-  - type: Lifecycle
-    url: lifecycle/supra-lifecycle.yml
 - name: Supra Price Feeds REST API
   description: >-
-    Oracle market-data REST API returning the latest price for a trading pair and historical OHLC candles for up to
-    one month, on the DORA data feeds Supra publishes on-chain. Two documented endpoints, GET /latest and
-    GET /history. Requires an x-api-key header; keys are issued by request form, and the surface is documented as
-    Early Access.
+    Oracle market-data REST API returning the latest price for a trading pair and historical OHLC candles
+    for up to one month, on the DORA data feeds Supra publishes on-chain. Two documented endpoints, GET
+    /latest and GET /history. Requires an x-api-key header; keys are issued by request form, and the surface
+    is documented as Early Access.
   humanURL: https://docs.supra.com/oracles/apis-real-time-and-historical-data/rest-api
   baseURL: https://prod-kline-rest.supra.com
   tags:
@@ -99,12 +64,13 @@ apis:
   - type: Authentication
     url: authentication/supra-authentication.yml
   - type: SignUp
-    url: https://docs.google.com/forms/d/e/1FAIpQLSfHZr8BHLTY8q_MjbuKZPpdgQS0oGmRIrsn9H-HrieH9eQjFw/viewform
+    url: >-
+      https://docs.google.com/forms/d/e/1FAIpQLSfHZr8BHLTY8q_MjbuKZPpdgQS0oGmRIrsn9H-HrieH9eQjFw/viewform
 - name: Supra Price Feeds WebSocket API
   description: >-
-    Streaming oracle market-data API. Clients open a WebSocket to wss://prod-kline-ws.supra.com with an x-api-key
-    header and send a subscribe action naming the ohlc_datafeed channel, a resolution in minutes, and a list of
-    trading pairs; the server pushes an OHLC update each interval.
+    Streaming oracle market-data API. Clients open a WebSocket to wss://prod-kline-ws.supra.com with an
+    x-api-key header and send a subscribe action naming the ohlc_datafeed channel, a resolution in minutes,
+    and a list of trading pairs; the server pushes an OHLC update each interval.
   humanURL: https://docs.supra.com/oracles/apis-real-time-and-historical-data/websocket-api
   baseURL: wss://prod-kline-ws.supra.com
   tags:
@@ -117,25 +83,295 @@ apis:
     url: https://docs.supra.com/oracles/apis-real-time-and-historical-data/websocket-api
   - type: Authentication
     url: authentication/supra-authentication.yml
-- name: Supra Automation API
-  description: >-
-    Read and observation surface for Supra's native on-chain automation (AutoFi) registry. Automation tasks are
-    registered and cancelled through the Supra CLI and Move entry functions rather than an HTTP write endpoint;
-    execution is observed through the node RPC using the automated_transactions account endpoint and the
-    type=auto block filter, and registry state is read through Move view functions.
-  humanURL: https://docs.supra.com/automation/api-reference
+- aid: supra:supra-accounts-api
+  name: Supra Accounts API
+  description: Accounts Api
+  humanURL: https://docs.supra.com/network/move/rest-api
   baseURL: https://rpc-mainnet.supra.com
   tags:
-  - Automation
-  - Blockchain
-  - Smart Contracts
-  - Move
+  - Accounts
   properties:
+  - type: OpenAPI
+    url: openapi/supra-accounts-api-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
   - type: Documentation
     url: https://docs.supra.com/automation/api-reference
+- aid: supra:supra-block-api
+  name: Supra Block API
+  description: Block Api
+  humanURL: https://docs.supra.com/network/move/rest-api
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - Block
+  properties:
   - type: OpenAPI
-    url: openapi/supra-rpc-node-openapi.yml
+    url: openapi/supra-block-api-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
+  - type: Documentation
+    url: https://docs.supra.com/automation/api-reference
+- aid: supra:supra-consensus-api
+  name: Supra Consensus API
+  description: The Consensus API from Supra — 7 operation(s) for consensus.
+  humanURL: https://docs.supra.com/network/move/rest-api
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - Consensus
+  properties:
+  - type: OpenAPI
+    url: openapi/supra-consensus-api-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
+  - type: Documentation
+    url: https://docs.supra.com/automation/api-reference
+- aid: supra:supra-events-api
+  name: Supra Events API
+  description: Events Api
+  humanURL: https://docs.supra.com/network/move/rest-api
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - Events
+  properties:
+  - type: OpenAPI
+    url: openapi/supra-events-api-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
+  - type: Documentation
+    url: https://docs.supra.com/automation/api-reference
+- aid: supra:supra-faucet-api
+  name: Supra Faucet API
+  description: Faucet Api
+  humanURL: https://docs.supra.com/network/move/rest-api
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - Faucet
+  properties:
+  - type: OpenAPI
+    url: openapi/supra-faucet-api-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
+  - type: Documentation
+    url: https://docs.supra.com/automation/api-reference
+- aid: supra:supra-proofs-api
+  name: Supra Proofs API
+  description: Endpoints for retrieving Merkle proofs for consensus-certified data.
+  humanURL: https://docs.supra.com/network/move/rest-api
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - Proofs
+  properties:
+  - type: OpenAPI
+    url: openapi/supra-proofs-api-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
+  - type: Documentation
+    url: https://docs.supra.com/automation/api-reference
+- aid: supra:supra-tables-api
+  name: Supra Tables API
+  description: Tables Api
+  humanURL: https://docs.supra.com/network/move/rest-api
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - Tables
+  properties:
+  - type: OpenAPI
+    url: openapi/supra-tables-api-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
+  - type: Documentation
+    url: https://docs.supra.com/automation/api-reference
+- aid: supra:supra-transactions-api
+  name: Supra Transactions API
+  description: Transactions Api
+  humanURL: https://docs.supra.com/network/move/rest-api
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - Transactions
+  properties:
+  - type: OpenAPI
+    url: openapi/supra-transactions-api-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
+  - type: Documentation
+    url: https://docs.supra.com/automation/api-reference
+- aid: supra:supra-version-api
+  name: Supra Version API
+  description: The Version API from Supra — 1 operation(s) for version.
+  humanURL: https://docs.supra.com/network/move/rest-api
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - Version
+  properties:
+  - type: OpenAPI
+    url: openapi/supra-version-api-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
+  - type: Documentation
+    url: https://docs.supra.com/automation/api-reference
+- aid: supra:supra-view-api
+  name: Supra View API
+  description: View Api
+  humanURL: https://docs.supra.com/network/move/rest-api
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - View
+  properties:
+  - type: OpenAPI
+    url: openapi/supra-view-api-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
+  - type: Documentation
+    url: https://docs.supra.com/automation/api-reference
+- aid: supra:supra-websocket-api
+  name: Supra Web Socket API
+  description: Block-streaming WebSocket subscription Api
+  humanURL: https://docs.supra.com/network/move/rest-api
+  baseURL: https://rpc-mainnet.supra.com
+  tags:
+  - WebSocket
+  properties:
+  - type: OpenAPI
+    url: openapi/supra-websocket-api-openapi.yml
+  - type: APIReference
+    url: https://rpc-mainnet.supra.com/docs/
+  - type: Documentation
+    url: https://docs.supra.com/network/move/rest-api
+  - type: Authentication
+    url: authentication/supra-authentication.yml
+  - type: Conventions
+    url: conventions/supra-conventions.yml
+  - type: ErrorCatalog
+    url: errors/supra-problem-types.yml
+  - type: DataModel
+    url: data-model/supra-data-model.yml
+  - type: Lifecycle
+    url: lifecycle/supra-lifecycle.yml
+  - type: Documentation
+    url: https://docs.supra.com/automation/api-reference
 common:
+- type: Overlay
+  url: overlays/supra-rpc-node-overlay.yaml
 - type: Website
   url: https://supra.com/
 - type: DeveloperPortal
