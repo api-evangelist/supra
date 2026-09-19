@@ -34,6 +34,19 @@ modified: '2026-08-29'
 tags:
 - Blockchain
 - Layer 1
+- Oracle
+- Web3
+- Market Data
+- Smart Contracts
+- Verifiable Randomness
+- Cross-Chain Bridge
+- Automation
+- Move
+- Cryptocurrency
+- DeFi
+tags_raw:
+- Blockchain
+- Layer 1
 - Oracles
 - Web3
 - Market Data
@@ -54,6 +67,11 @@ apis:
   humanURL: https://docs.supra.com/oracles/apis-real-time-and-historical-data/rest-api
   baseURL: https://prod-kline-rest.supra.com
   tags:
+  - Oracle
+  - Market Data
+  - Cryptocurrency
+  - Web3
+  tags_raw:
   - Oracles
   - Market Data
   - Cryptocurrency
@@ -74,6 +92,11 @@ apis:
   humanURL: https://docs.supra.com/oracles/apis-real-time-and-historical-data/websocket-api
   baseURL: wss://prod-kline-ws.supra.com
   tags:
+  - Oracle
+  - Market Data
+  - Cryptocurrency
+  - Web3
+  tags_raw:
   - Oracles
   - Market Data
   - Cryptocurrency
@@ -89,6 +112,8 @@ apis:
   humanURL: https://docs.supra.com/network/move/rest-api
   baseURL: https://rpc-mainnet.supra.com
   tags:
+  - Account
+  tags_raw:
   - Accounts
   properties:
   - type: OpenAPI
@@ -167,6 +192,8 @@ apis:
   humanURL: https://docs.supra.com/network/move/rest-api
   baseURL: https://rpc-mainnet.supra.com
   tags:
+  - Event
+  tags_raw:
   - Events
   properties:
   - type: OpenAPI
@@ -271,6 +298,8 @@ apis:
   humanURL: https://docs.supra.com/network/move/rest-api
   baseURL: https://rpc-mainnet.supra.com
   tags:
+  - Transaction
+  tags_raw:
   - Transactions
   properties:
   - type: OpenAPI
@@ -323,6 +352,8 @@ apis:
   humanURL: https://docs.supra.com/network/move/rest-api
   baseURL: https://rpc-mainnet.supra.com
   tags:
+  - Views
+  tags_raw:
   - View
   properties:
   - type: OpenAPI
