@@ -1,0 +1,547 @@
+openapi: 3.2.0
+info:
+  title: Supra RPC Node Proofs API
+  description: '0.5.0
+
+    tag:supra_rpc_v11.5.2
+
+    commit_hash:5e9ea652
+
+    build_time:2026-08-25 08:38:29 +00:00
+
+    build_env:rustc 1.97.1 (8bab26f4f 2026-07-14),1.97.1-x86_64-unknown-linux-gnu'
+  contact:
+    name: Supra Labs
+    url: https://supra.com
+  version: 5e9ea652457cd48aba6b1505bdd59da27fec13f6
+servers:
+- url: /
+tags:
+- name: Proofs
+  description: Endpoints for retrieving Merkle proofs for consensus-certified data.
+paths:
+  /rpc/v4/proofs/events:
+    post:
+      tags:
+      - Proofs
+      summary: Get a batch of event-emission proofs anchored to a single inclusion certificate…
+      description: 'Resolves a batch of `(transaction_hash, event_types)` selectors into:
+
+        - one transactions-inclusion certificate at the node''s latest certified block height
+
+        (covers both MoveVM and EVM accumulator roots),
+
+        - one transaction inclusion proof per requested transaction, anchored to the appropriate
+
+        per-VM accumulator root at that height,
+
+        - one event emission proof for every event in each transaction whose type matches one of
+
+        the caller''s requested `event_types`.
+
+
+        Both Move and EVM transactions are supported in the same request; the response''s per-item
+
+        `vm` field tells the verifier which root in the shared certificate the proof is anchored to:
+
+        - Move: `event_types` entries are `TypeTag` strings like `0x1::coin::CoinDeposit`.
+
+        - EVM: `event_types` entries are canonical Solidity event signatures like
+
+        `Transfer(address,address,uint256)`. The server keccak256-hashes each signature and
+
+        matches against each log''s `topic[0]`.
+
+
+        All returned proofs share a single certificate so cross-chain verifiers can verify the
+
+        committee aggregate signature once and then check each Merkle path against the shared root,
+
+        instead of re-verifying the certificate N times for N events.
+
+
+        Limitations in this version:
+
+        - The certificate is always pinned to the node''s latest certified height.
+
+        - At most 100 items per request and 500 resolved events across the batch.
+
+        - Only transactions with Move or EVM outputs are supported.
+
+
+        An empty `events` array for a transaction is not an error - it simply means none of the
+
+        requested `event_types` were emitted by that transaction.'
+      operationId: proofs_events_v4
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventEmissionProofsBatchRequest'
+        required: true
+      responses:
+        '200':
+          description: Batch of transaction inclusion and event emission proofs anchored to a single inclusion certificate.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventEmissionProofsBatchResponse'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+        '400':
+          description: Malformed request, batch too large, unknown transaction hash, unsupported transaction type in batch, or invalid event type.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/x-bcs:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+        '404':
+          description: No inclusion certificate is currently available on this node.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/x-bcs:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+  /rpc/v4/proofs/events/{event_hash}/transaction/{transaction_hash}:
+    get:
+      tags:
+      - Proofs
+      summary: Get a single event emission proof (v4)
+      description: 'This endpoint provides an event emission proof for the given event hash within the specified
+
+        transaction. The returned proof verifies that the given event was emitted as part of that given
+
+        transaction.'
+      operationId: proofs_event_emission_proof_v4
+      parameters:
+      - name: event_hash
+        in: path
+        required: false
+        schema:
+          $ref: '#/components/schemas/Hash'
+      - name: transaction_hash
+        in: path
+        required: false
+        schema:
+          $ref: '#/components/schemas/Hash'
+      responses:
+        '200':
+          description: Emission proof data of the given event.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventEmissionProof'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+        '400':
+          description: Malformed event or transaction hash provided.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/x-bcs:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+        '404':
+          description: The specified transaction hash does not exist.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/x-bcs:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+components:
+  schemas:
+    Hash:
+      type: string
+      description: Hex encoded hash
+    TransactionInclusionProof:
+      type: object
+      description: Proof of a transaction's inclusion in the merkle accumulator tree.
+      required:
+      - proof
+      - leaf_hash_value
+      - merkle_root_hash_value
+      - leaf_index
+      - certified_at_height
+      properties:
+        proof:
+          $ref: '#/components/schemas/AccumulatorProof'
+          description: The accumulator proof for the transaction.
+        leaf_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded hash value of the leaf node.
+        merkle_root_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded merkle root hash value.
+        leaf_index:
+          type: integer
+          format: u-int64
+          description: The leaf index in the accumulator tree.
+          minimum: 0
+        events_tree_merkle_root_hash_value:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/Hash'
+            description: Hex encoded merkle root hash value of the events tree, if available.
+        events_leaves_hash_values:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/Hash'
+          description: Hex encoded hash values of the events tree leaves, if available.
+        certified_at_height:
+          $ref: '#/components/schemas/u64'
+          description: Block height at which the Merkle root was certified.
+    EventEmissionProofsBatchRequest:
+      type: object
+      description: Request body for `POST /rpc/v4/proofs/event-emissions`.
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventEmissionProofsBatchItem'
+          description: 'One entry per transaction. Each entry resolves to zero-or-more event emission proofs
+
+            matching the requested types within that transaction.'
+    Certificate_TransactionsInclusionCertificationData:
+      type: object
+      required:
+      - certifying_committee
+      - data
+      - kind
+      - signature
+      - voters
+      properties:
+        certifying_committee:
+          $ref: '#/components/schemas/Hash'
+          description: The hash digest of the [Committee] that created this [sosmr::Certificate].
+        data:
+          $ref: '#/components/schemas/TransactionsInclusionCertificationData'
+          description: The data from which `signature` is derived.
+        kind:
+          $ref: '#/components/schemas/CertificateThresholdType'
+          description: 'The type of threshold that `signature` satisfies with respect to the [Committee]
+
+            that created this [sosmr::Certificate].'
+        signature:
+          type: object
+          description: A signature on the [CertificateSignatureData] transformation of `data`.
+        voters:
+          type: array
+          items:
+            type: boolean
+          description: 'Identifies the nodes whose signatures were used to construct `signature`.
+
+            Each index corresponds to an index in the vector of public keys of the
+
+            participants in the corresponding committee, with its value being set
+
+            to `true` if the participant''s signature was included in `signature`.'
+    EpochId:
+      type: object
+      required:
+      - chain_id
+      - epoch
+      properties:
+        chain_id:
+          oneOf:
+          - type: integer
+            format: u-int8
+            minimum: 0
+          description: Unique identifier for this instance of the SMR.
+        epoch:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the epoch within the context of `chain_id`.
+    EventEmissionProofEntry:
+      type: object
+      description: 'A single matched event''s emission proof plus the metadata needed to correlate it back to
+
+        the caller''s request.'
+      required:
+      - event_hash
+      - event_type
+      - event_index
+      - event_emission_proof
+      properties:
+        event_hash:
+          $ref: '#/components/schemas/Hash'
+        event_type:
+          type: string
+          description: 'Echo of the matched event type. For Move events this is the fully qualified TypeTag
+
+            (e.g. `0x1::coin::CoinDeposit`); for EVM events this is the canonical Solidity signature
+
+            (e.g. `Transfer(address,address,uint256)`) the caller supplied.'
+        event_index:
+          type: integer
+          format: u-int64
+          description: Position of the event within the transaction's emitted-events list.
+          minimum: 0
+        event_emission_proof:
+          $ref: '#/components/schemas/EventEmissionProof'
+    EventEmissionProofsBatchItem:
+      type: object
+      description: 'Per-transaction selector. Both Move and EVM transactions are supported; the format of each
+
+        entry in `event_types` is dispatched off the transaction''s VM.'
+      required:
+      - transaction_hash
+      - event_types
+      properties:
+        transaction_hash:
+          $ref: '#/components/schemas/Hash'
+        event_types:
+          type: array
+          items:
+            type: string
+          description: "Event type selectors. Format depends on the transaction's VM:\n\n- **Move:** fully qualified `TypeTag` strings, e.g. `0x1::coin::CoinDeposit`. Each entry\n  must parse via `TypeTag::from_str`.\n- **EVM:** canonical Solidity event signatures, e.g. `Transfer(address,address,uint256)`\n  (no parameter names, no whitespace). The server computes\n  `topic[0] = keccak256(signature)` and matches against each log's first topic.\n\nDuplicates are deduplicated server-side. An entry that matches zero events in the\ntransaction is not an error; the corresponding output simply omits it from the\nper-transaction `events` array."
+    TransactionsInclusionCertificationData:
+      type: object
+      description: 'Data payload for transaction inclusion certificate.
+
+
+        Certified by the transaction inclusion certifier to prove the both MoveVM and EVM
+
+        merkle accumulator of a specific block height.'
+      required:
+      - movevm_merkle_accumulator_tree_root
+      - evm_merkle_accumulator_tree_root
+      - block_height
+      - epoch_id
+      properties:
+        movevm_merkle_accumulator_tree_root:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded root hash of the MoveVM merkle accumulator tree.
+        evm_merkle_accumulator_tree_root:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded root hash of the EVM merkle accumulator tree.
+        block_height:
+          $ref: '#/components/schemas/u64'
+          description: The block height for which the merkle roots are certified.
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: The epoch identifier.
+    EventEmissionProofsBatchItemResponse:
+      type: object
+      description: 'Per-transaction proof bundle. A single `transaction_inclusion_proof` is shared across all
+
+        matched events in the same transaction.'
+      required:
+      - transaction_hash
+      - vm
+      - transaction_inclusion_proof
+      - events
+      properties:
+        transaction_hash:
+          $ref: '#/components/schemas/Hash'
+        vm:
+          $ref: '#/components/schemas/Vm'
+          description: 'VM that produced this transaction. Tells the verifier which root in the shared
+
+            `inclusion_certificate` to check the `transaction_inclusion_proof` against.'
+        transaction_inclusion_proof:
+          $ref: '#/components/schemas/TransactionInclusionProof'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventEmissionProofEntry'
+          description: 'One entry per event in the transaction whose type was in the requested set, in the order
+
+            the events were emitted. Empty if no event matched.'
+    u64:
+      type: integer
+      format: u-int64
+      minimum: 0
+    Vm:
+      type: string
+      description: 'VM that produced a given transaction and its events. Determines which accumulator root in the
+
+        shared `inclusion_certificate` a per-item `transaction_inclusion_proof` verifies against:
+
+        `Move` → `movevm_merkle_accumulator_tree_root`, `Evm` → `evm_merkle_accumulator_tree_root`.'
+      enum:
+      - move
+      - evm
+    CertificateThresholdType:
+      type: string
+      enum:
+      - Validity
+      - Quorum
+      - Unanimous
+      - BcftValidity
+      - BcftQuorum
+      - BcftFallbackViewChange
+      - ClanMajority
+    ErrResp:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+    EventEmissionProofsBatchResponse:
+      type: object
+      description: 'Response body for `POST /rpc/v4/proofs/event-emissions`.
+
+
+        All proofs in the response are anchored to a single inclusion certificate at
+
+        `block_height`. A cross-chain verifier can verify the certificate''s committee aggregate
+
+        signature once and then verify each per-leaf Merkle path against the certificate''s
+
+        accumulator root.'
+      required:
+      - block_height
+      - inclusion_certificate
+      - items
+      properties:
+        block_height:
+          $ref: '#/components/schemas/u64'
+          description: 'Block height at which the inclusion certificate was issued. All `transaction_inclusion_proof`
+
+            values in this response are anchored to the accumulator frontier at this height.'
+        inclusion_certificate:
+          $ref: '#/components/schemas/Certificate_TransactionsInclusionCertificationData'
+          description: 'Committee-signed certificate over the MoveVM and EVM accumulator roots at `block_height`.
+
+            Verifying this certificate once attests to both roots; per-leaf Merkle paths in `items`
+
+            are then verified against the certificate''s MoveVM root.'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventEmissionProofsBatchItemResponse'
+          description: 'One entry per request `items` entry, in the same order. Each entry carries the
+
+            transaction-inclusion proof and zero-or-more matched event-emission proofs.'
+    EventEmissionProof:
+      type: object
+      description: Proof of an event's emission within a transaction's events tree.
+      required:
+      - proof
+      - merkle_root_hash_value
+      - leaf_hash_value
+      - leaf_index
+      properties:
+        proof:
+          $ref: '#/components/schemas/AccumulatorProof'
+          description: The accumulator proof for the event.
+        merkle_root_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded merkle root hash value.
+        leaf_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded hash value of the leaf node.
+        leaf_index:
+          type: integer
+          format: u-int64
+          description: The leaf index in the events accumulator tree.
+          minimum: 0
+    AccumulatorProof:
+      type: object
+      description: 'A proof that can be used authenticate an element in an accumulator given trusted root hash. For
+
+        example, both `TransactionInclusionProof` and `EventEmissionProof` can be constructed on top of
+
+        this structure.'
+      required:
+      - siblings
+      properties:
+        siblings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Hash'
+          description: 'All siblings in this proof, including the default ones. Siblings are ordered from the bottom
+
+            level to the root level.'

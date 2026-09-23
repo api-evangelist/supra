@@ -1,0 +1,69 @@
+openapi: 3.2.0
+info:
+  title: Supra RPC Node Version API
+  description: '0.5.0
+
+    tag:supra_rpc_v11.5.2
+
+    commit_hash:5e9ea652
+
+    build_time:2026-08-25 08:38:29 +00:00
+
+    build_env:rustc 1.97.1 (8bab26f4f 2026-07-14),1.97.1-x86_64-unknown-linux-gnu'
+  contact:
+    name: Supra Labs
+    url: https://supra.com
+  version: 5e9ea652457cd48aba6b1505bdd59da27fec13f6
+servers:
+- url: /
+tags:
+- name: Version
+paths:
+  /rpc/v3/version:
+    get:
+      tags:
+      - Version
+      summary: Get Build Information (v3)
+      description: Return the build information of the rpc node binary.
+      operationId: version_info_v3
+      responses:
+        '200':
+          description: Current binary build information
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionInfo'
+components:
+  schemas:
+    VersionInfo:
+      type: object
+      description: JSON payload returned by `/rpc/v3/version`
+      required:
+      - version
+      - branch
+      - commit_hash
+      - build_time
+      - build_env
+      properties:
+        version:
+          type: string
+          description: SemVer coming from Cargo.toml
+        branch:
+          type: string
+          description: Git branch used for the build
+        commit_hash:
+          type: string
+          description: Full git commit hash
+        build_time:
+          type: string
+          description: Timestamp produced by `build.rs`
+        build_env:
+          type: string
+          description: Rust tool-chain used to build the binary

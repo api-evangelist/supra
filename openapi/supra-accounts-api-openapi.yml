@@ -1,0 +1,1572 @@
+openapi: 3.2.0
+info:
+  title: Supra RPC Node Accounts API
+  description: '0.5.0
+
+    tag:supra_rpc_v11.5.2
+
+    commit_hash:5e9ea652
+
+    build_time:2026-08-25 08:38:29 +00:00
+
+    build_env:rustc 1.97.1 (8bab26f4f 2026-07-14),1.97.1-x86_64-unknown-linux-gnu'
+  contact:
+    name: Supra Labs
+    url: https://supra.com
+  version: 5e9ea652457cd48aba6b1505bdd59da27fec13f6
+servers:
+- url: /
+tags:
+- name: Accounts
+  description: Accounts Api
+paths:
+  /rpc/v2/accounts/{address}:
+    get:
+      tags:
+      - Accounts
+      summary: Get account (v2)
+      description: '# Response
+
+        - `auth_key` — The authentication key used for validating transactions.
+
+        - `sequence_number` — The current expected sequence number of the account.'
+      operationId: get_account_v2
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      responses:
+        '200':
+          description: Account information retrieved successfully
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountData'
+      deprecated: true
+  /rpc/v2/accounts/{address}/coin_transactions:
+    get:
+      tags:
+      - Accounts
+      summary: Get coin transactions (v2)
+      description: 'List of finalized coin withdraw/deposit transactions relevant to the move account. Return max 100 transactions per request.
+
+        It includes both transactions sent from and received by the account.'
+      operationId: coin_transactions_v2
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: count
+        in: query
+        description: Maximum number of items to return. Default is 20.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        style: form
+      - name: start
+        in: query
+        description: 'The cursor that the search should start from. The cursor for a given transaction can be derived by adding
+
+          its index (where indexes start from zero) in the block in which it became finalized to the timestamp of the
+
+          block.
+
+
+          During a paginated query, the cursor returned in the previous page should be used as the starting cursor of the next page.
+
+
+          If provided, return `:count` of transactions starting from this cursor in ascending order.
+
+          If not provided, return `:count` of most recent transactions in descending order.'
+        required: false
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+        style: form
+      responses:
+        '200':
+          description: List of *finalized* transactions sent from and received by the move account.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountCoinStatementV2'
+      deprecated: true
+  /rpc/v2/accounts/{address}/modules:
+    get:
+      tags:
+      - Accounts
+      summary: Get account modules (v2)
+      description: Retrieves all account modules' bytecode for a given account.
+      operationId: get_account_modules_v2
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: count
+        in: query
+        description: Maximum number of items to return. Default is 20.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        style: form
+      - name: start
+        in: query
+        description: 'Cursor specifying where to start for pagination.
+
+          Use the cursor returned by the API when making the next request.'
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        '200':
+          description: account module list
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveModuleListV2'
+      deprecated: true
+  /rpc/v2/accounts/{address}/modules/{module_name}:
+    get:
+      tags:
+      - Accounts
+      summary: Get account module (v2)
+      description: Retrieves an individual module from a given account.
+      operationId: get_account_module_v2
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: module_name
+        in: path
+        description: Name of module to retrieve e.g. coin
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: View account module by Move module name
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveModuleBytecode'
+      deprecated: true
+  /rpc/v2/accounts/{address}/resources:
+    get:
+      tags:
+      - Accounts
+      summary: Get account resources (v2)
+      description: Get account resources by address
+      operationId: get_account_resources_v2
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: count
+        in: query
+        description: Maximum number of items to return. Default is 20.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        style: form
+      - name: start
+        in: query
+        description: 'Cursor specifying where to start for pagination.
+
+          Use the cursor returned by the API when making the next request.'
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        '200':
+          description: Account resource list
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveResourcesResponse'
+      deprecated: true
+  /rpc/v2/accounts/{address}/resources/{resource_type}:
+    get:
+      tags:
+      - Accounts
+      summary: Get account resource (v2)
+      description: View account resource by Move type
+      operationId: get_account_resource_v2
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: resource_type
+        in: path
+        description: Name of struct to retrieve e.g. `0x1::account::Account`
+        required: true
+        schema:
+          type: string
+          pattern: ^0x[0-9a-zA-Z:_<>]+$
+        example: 0x1::coin::CoinStore<0x1::supra_coin::SupraCoin>
+      responses:
+        '200':
+          description: View account resource by Move Struct type
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveResource'
+      deprecated: true
+  /rpc/v2/accounts/{address}/transactions:
+    get:
+      tags:
+      - Accounts
+      summary: Get account transactions (v2)
+      description: List of finalized transactions sent by the move account. Return max 100 transactions per request.
+      operationId: get_account_transactions_v2
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: count
+        in: query
+        description: Maximum number of items to return. Default is 20.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        style: form
+      - name: start
+        in: query
+        description: 'Starting sequence number.
+
+          If provided, return `:count` of transactions starting from this sequence number in ascending order.
+
+          If not provided, return `:count` of most recent transactions in descending order.'
+        required: false
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+        style: form
+      responses:
+        '200':
+          description: List of transactions from the move account.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountStatementV2'
+      deprecated: true
+  /rpc/v3/accounts/{address}:
+    get:
+      tags:
+      - Accounts
+      summary: Get account (v3)
+      description: '# Response
+
+        - `auth_key` — The authentication key used for validating transactions.
+
+        - `sequence_number` — The current expected sequence number of the account.'
+      operationId: get_account_v3
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      responses:
+        '200':
+          description: Account information retrieved successfully
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountData'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+  /rpc/v3/accounts/{address}/automated_transactions:
+    get:
+      tags:
+      - Accounts
+      summary: Get account auto-transaction (v3)
+      description: 'List of finalized automated transactions based on the automation tasks registered by the move account.
+
+        Return max 100 transactions per request.'
+      operationId: statement_automated_v3
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: count
+        in: query
+        description: Maximum number of items to return. Default is 20.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        style: form
+      - name: block_height
+        in: query
+        description: 'Starting block height (inclusive). Optional.
+
+
+          The block height at which to start lookup for transactions.
+
+          If provided, returns `:count` of transactions starting from it in the specified order.
+
+          For order see `:ascending` flag.
+
+
+          Note: If a `:cursor` is specified then this field will be ignored.'
+        required: false
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+        style: form
+      - name: cursor
+        in: query
+        description: 'The cursor (exclusive) to start the query from. Optional.
+
+
+          If provided, returns `:count` of transactions starting from this cursor in the specified order.
+
+          For order see `:ascending` flag.
+
+
+          If not specified, the lookup will be done based on the `:block_height` parameter value.
+
+          Note: If both `:cursor` and `:block_height` are specified then `:cursor` has precedence.'
+        required: false
+        schema:
+          type: string
+        style: form
+      - name: ascending
+        in: query
+        description: 'Flag indicating order of lookup.
+
+
+          Defaults to `false`; i.e. transactions are returned in descending order of their execution.
+
+          If `true`, transactions are returned in ascending order of their execution.'
+        required: false
+        schema:
+          type: boolean
+        style: form
+      responses:
+        '200':
+          description: List of automated transactions of the move account.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+            x-supra-cursor:
+              schema:
+                type: string
+              description: Cursor specifying where to start for pagination. This cursor cannot be derived manually client-side. Instead, you must call this endpoint once without this query parameter specified, and then use the cursor returned in the x-supra-cursor header in the response.
+            x-supra-oldest-block:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Height of the oldest available block. Absent until the archive has indexed at least one block.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountStatementV3'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+        '503':
+          description: The archive is still initializing. No executed blocks are available yet. Please retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+  /rpc/v3/accounts/{address}/coin_transactions:
+    get:
+      tags:
+      - Accounts
+      summary: Get coin transactions (v3)
+      description: List of finalized coin withdraw/deposit transactions relevant to the move account. Return max 100 transactions per request.
+      operationId: coin_transactions_v3
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: count
+        in: query
+        description: Maximum number of items to return. Default is 20.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        style: form
+      - name: start
+        in: query
+        description: 'The cursor (exclusive) that the search should start from.
+
+
+          If provided, returns `:count` of transactions starting from this cursor in the specified order.
+
+
+          For order see `:ascending` flag.'
+        required: false
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+        style: form
+      - name: ascending
+        in: query
+        description: 'Flag indicating order of lookup.
+
+
+          Defaults to `false` i.e. transactions are returned in descending order of their execution.
+
+          If `true`, transactions are returned in ascending order of their execution.'
+        required: false
+        schema:
+          type: boolean
+        style: form
+      - name: type
+        in: query
+        description: Transaction type to query. If missing any/all type of transactions will be looked for.
+        required: false
+        schema:
+          type: string
+          description: Type of the transaction to be queried.
+          enum:
+          - auto
+          - user
+          - meta
+          - record
+      responses:
+        '200':
+          description: List of *finalized* transactions sent from and received by the move account.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+            x-supra-cursor:
+              schema:
+                type: string
+              description: Cursor specifying where to start for pagination. This cursor cannot be derived manually client-side. Instead, you must call this endpoint once without this query parameter specified, and then use the cursor returned in the x-supra-cursor header in the response.
+            x-supra-oldest-block:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Height of the oldest available block. Absent until the archive has indexed at least one block.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountStatementV3'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+        '503':
+          description: The archive is still initializing. No executed blocks are available yet. Please retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+  /rpc/v3/accounts/{address}/fa_transactions:
+    get:
+      tags:
+      - Accounts
+      summary: Get Fungible Asset transactions (v3)
+      description: List of finalized Fungible Asset withdraw/deposit transactions relevant to the given Fungible Store address. Returns at most 100 transactions per request.
+      operationId: fa_transactions_v3
+      parameters:
+      - name: address
+        in: path
+        description: Fungible Store address with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: count
+        in: query
+        description: Maximum number of items to return. Default is 20.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        style: form
+      - name: start
+        in: query
+        description: 'The cursor (exclusive) that the search should start from.
+
+
+          If provided, returns `:count` of transactions starting from this cursor in the specified order.
+
+
+          For order see `:ascending` flag.'
+        required: false
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+        style: form
+      - name: ascending
+        in: query
+        description: 'Flag indicating order of lookup.
+
+
+          Defaults to `false` i.e. transactions are returned in descending order of their execution.
+
+          If `true`, transactions are returned in ascending order of their execution.'
+        required: false
+        schema:
+          type: boolean
+        style: form
+      - name: type
+        in: query
+        description: Transaction type to query. If missing any/all type of transactions will be looked for.
+        required: false
+        schema:
+          type: string
+          description: Type of the transaction to be queried.
+          enum:
+          - auto
+          - user
+          - meta
+          - record
+      responses:
+        '200':
+          description: List of *finalized* Fungible Asset transactions associated with the given Fungible Store address.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+            x-supra-cursor:
+              schema:
+                type: string
+              description: Cursor specifying where to start for pagination. This cursor cannot be derived manually client-side. Instead, you must call this endpoint once without this query parameter specified, and then use the cursor returned in the x-supra-cursor header in the response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountStatementV3'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+  /rpc/v3/accounts/{address}/modules:
+    get:
+      tags:
+      - Accounts
+      summary: Get account modules (v3)
+      description: Retrieves all account modules' bytecode for a given account.
+      operationId: get_account_modules_v3
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: count
+        in: query
+        description: Maximum number of items to return. Default is 20.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        style: form
+      - name: start
+        in: query
+        description: 'Cursor specifying where to start for pagination.
+
+          Use the cursor returned by the API when making the next request.'
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        '200':
+          description: Account module list
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+            x-supra-cursor:
+              schema:
+                type: string
+              description: Cursor specifying where to start for pagination. This cursor cannot be derived manually client-side. Instead, you must call this endpoint once without this query parameter specified, and then use the cursor returned in the x-supra-cursor header in the response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MoveModuleBytecode'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+  /rpc/v3/accounts/{address}/modules/{module_name}:
+    get:
+      tags:
+      - Accounts
+      summary: Get account module (v3)
+      description: Retrieves an individual module from a given account.
+      operationId: get_account_module_v3
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: module_name
+        in: path
+        description: Name of module to retrieve e.g. coin
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: View account module by Move module name
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveModuleBytecode'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+  /rpc/v3/accounts/{address}/resources:
+    get:
+      tags:
+      - Accounts
+      summary: Get account resources (v3)
+      description: Retrieves all account resources for a given account.
+      operationId: get_account_resources_v3
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: count
+        in: query
+        description: Maximum number of items to return. Default is 20.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        style: form
+      - name: start
+        in: query
+        description: 'Cursor specifying where to start for pagination.
+
+          Use the cursor returned by the API when making the next request.'
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        '200':
+          description: Account resource list
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+            x-supra-cursor:
+              schema:
+                type: string
+              description: Cursor specifying where to start for pagination. This cursor cannot be derived manually client-side. Instead, you must call this endpoint once without this query parameter specified, and then use the cursor returned in the x-supra-cursor header in the response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MoveResource'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+  /rpc/v3/accounts/{address}/resources/{resource_type}:
+    get:
+      tags:
+      - Accounts
+      summary: Get account resource (v3)
+      description: View account resource by Move type
+      operationId: get_account_resource_v3
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: resource_type
+        in: path
+        description: Name of struct to retrieve e.g. `0x1::account::Account`
+        required: true
+        schema:
+          type: string
+          pattern: ^0x[0-9a-zA-Z:_<>]+$
+        example: 0x1::coin::CoinStore<0x1::supra_coin::SupraCoin>
+      responses:
+        '200':
+          description: View account resource by Move Struct type
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveResource'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+  /rpc/v3/accounts/{address}/transactions:
+    get:
+      tags:
+      - Accounts
+      summary: Get account transactions (v3)
+      description: List of finalized transactions sent by the move account. Return max 100 transactions per request.
+      operationId: get_account_transactions_v3
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      - name: count
+        in: query
+        description: Maximum number of items to return. Default is 20.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        style: form
+      - name: start
+        in: query
+        description: 'Starting sequence number.
+
+
+          If provided, return `:count` of transactions starting from this sequence number (inclusive)
+
+          in the specified order.
+
+
+          For order see `:ascending` flag.'
+        required: false
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+        style: form
+      - name: ascending
+        in: query
+        description: 'Flag indicating order of lookup.
+
+
+          Defaults to `false`; i.e. the transactions are returned in descending order by sequence number.
+
+          If `true`, transactions are returned in ascending order by sequence number.'
+        required: false
+        schema:
+          type: boolean
+        style: form
+      responses:
+        '200':
+          description: List of transactions from the move account.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+            x-supra-oldest-block:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Height of the oldest available block. Absent until the archive has indexed at least one block.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountStatementV3'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+        '503':
+          description: The archive is still initializing. No executed blocks are available yet. Please retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+components:
+  schemas:
+    EventV1:
+      type: object
+      description: On-chain event.
+      required:
+      - guid
+      - sequence_number
+      - type
+      - data
+      properties:
+        guid:
+          $ref: '#/components/schemas/Guid'
+          description: The globally unique identifier of this event stream.
+        sequence_number:
+          type: string
+        type:
+          type: string
+          description: The `MoveType` of the event
+        data:
+          description: The JSON representation of the event
+    Address:
+      $ref: '#/components/schemas/AccountAddress'
+      description: 'The address of an account
+
+
+        This is represented in a string as a 64 character hex string, sometimes
+
+        shortened by stripping leading 0s, and adding a 0x.'
+    MoveModule:
+      type: object
+      description: A Move module.
+      required:
+      - address
+      - name
+      - friends
+      - exposed_functions
+      - structs
+      properties:
+        address:
+          $ref: '#/components/schemas/Address'
+        name:
+          type: object
+        friends:
+          type: object
+          description: Friends of the module
+        exposed_functions:
+          type: object
+          description: Public functions of the module
+        structs:
+          type: object
+          description: Structs of the module
+    TxExecutionStatus:
+      type: string
+      enum:
+      - Success
+      - Fail
+      - Invalid
+      - PendingAfterExecution
+      - Pending
+    EvmTransferKind:
+      type: string
+      enum:
+      - call
+      - create
+      - create2
+      - selfdestruct
+    MoveResourcesResponse:
+      type: object
+      required:
+      - resources
+      - cursor
+      properties:
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/MoveResource'
+          description: A list of Move Resources.
+        cursor:
+          type: string
+          description: The hex-encoded bytes of the state key of the last resource in the list.
+    TransactionV3:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/TransactionInfoV2'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - user
+      - allOf:
+        - $ref: '#/components/schemas/TransactionInfoV2'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - automated
+      - allOf:
+        - $ref: '#/components/schemas/BlockMetadataInfoV3'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - block_metadata
+      - allOf:
+        - $ref: '#/components/schemas/AutomationRecordInfoV3'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - automation_record
+    Hash:
+      type: string
+      description: Hex encoded hash
+    BlockMetadataInfoV3:
+      type: object
+      description: Details of block metadata transaction execution
+      required:
+      - hash
+      - output
+      - status
+      properties:
+        hash:
+          $ref: '#/components/schemas/Hash'
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/BlockHeaderInfo'
+            description: 'Metadata about the block containing the transaction, if any.
+
+              This field will not be set for transactions that are returned as a part of a block.'
+        output:
+          $ref: '#/components/schemas/TransactionOutputV1'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
+    TransactionOutputV1:
+      oneOf:
+      - type: object
+        required:
+        - Dkg
+        properties:
+          Dkg:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: string
+        enum:
+        - Empty
+      - type: object
+        required:
+        - Move
+        properties:
+          Move:
+            $ref: '#/components/schemas/MoveTransactionOutputV1'
+      - type: object
+        required:
+        - Oracle
+        properties:
+          Oracle:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: object
+        required:
+        - Evm
+        properties:
+          Evm:
+            $ref: '#/components/schemas/EvmTransactionOutput'
+      description: '[crate::v1::TransactionOutputV1] with all fields in human-readable format.'
+    AccountStatementV2:
+      type: object
+      required:
+      - record
+      properties:
+        record:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionInfoV2'
+    EvmTransferOperation:
+      type: object
+      description: This is a convenience structure wrapping [`TransferOperation`] to implement (de)serialization logic.
+      required:
+      - kind
+      - from
+      - to
+      - value
+      properties:
+        kind:
+          $ref: '#/components/schemas/EvmTransferKind'
+          description: Source of the transfer call.
+        from:
+          type: string
+          description: Sender of the transfer.
+        to:
+          type: string
+          description: Receiver of the transfer.
+        value:
+          type: string
+          description: Value of the transfer.
+    AccountData:
+      type: object
+      description: Datatype that holds the sequence number and account authentication key.
+      required:
+      - sequence_number
+      - authentication_key
+      properties:
+        sequence_number:
+          type: integer
+          format: u-int64
+          minimum: 0
+        authentication_key:
+          $ref: '#/components/schemas/Hash'
+    AccountStatementV3:
+      type: array
+      items:
+        $ref: '#/components/schemas/TransactionV3'
+      description: Account transactions of [TransactionV3] type.
+    MoveResource:
+      type: object
+      description: A Move Resource.
+      required:
+      - type
+      - data
+      properties:
+        type:
+          type: string
+        data:
+          type: object
+    MoveTransactionOutputV1:
+      type: object
+      description: The execution output of a Move transaction.
+      required:
+      - gas_used
+      - events
+      - vm_status
+      properties:
+        gas_used:
+          type: integer
+          format: u-int64
+          description: The gas used by the transaction.
+          minimum: 0
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventV1'
+        vm_status:
+          type: string
+          description: A message summarizing the execution result produced by the MoveVM.
+    EpochId:
+      type: object
+      required:
+      - chain_id
+      - epoch
+      properties:
+        chain_id:
+          oneOf:
+          - type: integer
+            format: u-int8
+            minimum: 0
+          description: Unique identifier for this instance of the SMR.
+        epoch:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the epoch within the context of `chain_id`.
+    Guid:
+      type: object
+      description: A globally unique identifier derived from the sender's address and a counter
+      required:
+      - creation_number
+      - account_address
+      properties:
+        creation_number:
+          type: string
+          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
+        account_address:
+          $ref: '#/components/schemas/AccountAddress'
+          description: Address that created the GUID
+    BlockHeaderInfo:
+      type: object
+      description: Metadata about a Supra block.
+      required:
+      - author
+      - hash
+      - height
+      - parent
+      - timestamp
+      - view
+      properties:
+        author:
+          $ref: '#/components/schemas/Identity'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        height:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Number of blocks before this block in the chain (including the genesis block).
+        parent:
+          $ref: '#/components/schemas/Hash'
+        timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+        view:
+          $ref: '#/components/schemas/View'
+    MoveModuleBytecode:
+      type: object
+      required:
+      - bytecode
+      - abi
+      properties:
+        bytecode:
+          type: string
+          description: Hex encoded bytecode
+        abi:
+          $ref: '#/components/schemas/MoveModule'
+    SmrTimestamp:
+      type: object
+      required:
+      - timestamp
+      properties:
+        timestamp:
+          type: integer
+          format: u-int64
+          description: The timestamp as measured in the number of microseconds since the unix epoch.
+          minimum: 0
+    ErrResp:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+    AccountAddress:
+      type: string
+      description: Hex encoded account address.
+    AccountCoinStatementV2:
+      type: object
+      required:
+      - record
+      - cursor
+      properties:
+        record:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionInfoV2'
+        cursor:
+          type: integer
+          format: u-int64
+          minimum: 0
+    MoveModuleListV2:
+      type: object
+      required:
+      - modules
+      properties:
+        modules:
+          type: array
+          items:
+            $ref: '#/components/schemas/MoveModuleBytecode'
+        cursor:
+          type:
+          - string
+          - 'null'
+          description: 'Cursor specifying where to start for pagination.
+
+            Use the cursor returned by the API when making the next request.'
+    TransactionInfoV2:
+      type: object
+      description: Information about a Supra transaction.
+      required:
+      - authenticator
+      - hash
+      - header
+      - payload
+      - status
+      properties:
+        authenticator:
+          type: object
+          description: The cryptographic material that was submitted with the transaction, according to its type.
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/BlockHeaderInfo'
+            description: 'Metadata about the block containing the transaction, if any. This field should
+
+              not be set if this [TransactionInfoV2] is yet to be included in a [Block].'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        header:
+          $ref: '#/components/schemas/SmrTransactionHeader'
+        payload:
+          type: object
+          description: The deserialized payload of the transaction according to its type.
+        output:
+          oneOf:
+          - $ref: '#/components/schemas/TransactionOutputV1'
+          - type: 'null'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
+    EvmTransactionOutput:
+      oneOf:
+      - type: object
+        description: Returned successfully
+        required:
+        - Success
+        properties:
+          Success:
+            type: object
+            description: Returned successfully
+            required:
+            - reason
+            - gas_used
+            - gas_refunded
+            - logs
+            - output
+            properties:
+              reason: {}
+              gas_used:
+                type: integer
+                format: u-int64
+                minimum: 0
+              gas_refunded:
+                type: integer
+                format: u-int64
+                minimum: 0
+              logs: {}
+              output: {}
+              transfers:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EvmTransferOperation'
+                description: A list of transfer operations during the transaction execution.
+      - type: object
+        description: Reverted by `REVERT` opcode that doesn't spend all gas.
+        required:
+        - Revert
+        properties:
+          Revert:
+            type: object
+            description: Reverted by `REVERT` opcode that doesn't spend all gas.
+            required:
+            - gas_used
+            - output
+            properties:
+              gas_used:
+                type: integer
+                format: u-int64
+                minimum: 0
+              output:
+                type: string
+      - type: object
+        description: Reverted for various reasons and spend all gas.
+        required:
+        - Halt
+        properties:
+          Halt:
+            type: object
+            description: Reverted for various reasons and spend all gas.
+            required:
+            - reason
+            - gas_used
+            properties:
+              reason: {}
+              gas_used:
+                type: integer
+                format: u-int64
+                description: Halting will spend all the gas, and will be equal to gas_limit.
+                minimum: 0
+      - type: object
+        description: Error occurred during execution.
+        required:
+        - Error
+        properties:
+          Error:
+            type: object
+            description: Error occurred during execution.
+            required:
+            - message
+            properties:
+              message:
+                type: string
+      description: API representation of the execution output of an Evm transaction.
+    Identity:
+      type: string
+      description: Hex encoded identity.
+    View:
+      type: object
+      required:
+      - epoch_id
+      - round
+      properties:
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: Identifier of the consensus epoch.
+        round:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the consensus round.
+    SmrTransactionHeader:
+      type: object
+      required:
+      - chain_id
+      - expiration_timestamp
+      - sender
+      - sequence_number
+      - gas_unit_price
+      - max_gas_amount
+      properties:
+        chain_id:
+          type: integer
+          format: u-int64
+          description: 'The unique identifier for the instance of the Supra chain that this transaction should
+
+            be executed upon.'
+          minimum: 0
+        expiration_timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+          description: The time at which this transaction should be discarded if it has not been executed.
+        sender:
+          $ref: '#/components/schemas/AccountAddress'
+          description: The standardized representation of the sender's account address in the target VM.
+        sequence_number:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: The sequence number of the sender's account in the target VM.
+        gas_unit_price:
+          type: integer
+          description: The amount of Supra that the sender is willing to pay per unit of gas.
+          minimum: 0
+        max_gas_amount:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: The maximum amount of gas that the sender is willing to spend.

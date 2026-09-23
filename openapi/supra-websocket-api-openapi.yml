@@ -1,0 +1,81 @@
+openapi: 3.2.0
+info:
+  title: Supra RPC Node Web Socket API
+  description: '0.5.0
+
+    tag:supra_rpc_v11.5.2
+
+    commit_hash:5e9ea652
+
+    build_time:2026-08-25 08:38:29 +00:00
+
+    build_env:rustc 1.97.1 (8bab26f4f 2026-07-14),1.97.1-x86_64-unknown-linux-gnu'
+  contact:
+    name: Supra Labs
+    url: https://supra.com
+  version: 5e9ea652457cd48aba6b1505bdd59da27fec13f6
+servers:
+- url: /
+tags:
+- name: Websocket
+  description: Block-streaming WebSocket subscription Api
+paths:
+  /rpc/v4/ws:
+    get:
+      tags:
+      - Websocket
+      summary: Supra JSON-RPC WebSocket subscriptions (v4)
+      description: 'Opens a WebSocket connection over which clients may subscribe to Supra-formatted API data.
+
+        Serves data for all VMs.
+
+
+        This is a `GET` request that upgrades to a WebSocket. Over the socket, a minimal JSON-RPC
+
+        2.0 subscription protocol is spoken (note: OpenAPI documents the upgrade handshake only,
+
+        not the pushed message stream):
+
+
+        - `supra_subscribe ["newBlocks", {"includeTransactions": , "includeProof": }]`
+
+        streams the full `BlockV4` for each newly committed block (defaults: `includeTransactions =
+
+        true`, `includeProof = false`).
+
+        - `supra_subscribe ["newBlockHeaders"]` streams the `BlockHeaderInfo` only.
+
+        - `supra_unsubscribe [""]` cancels a subscription.
+
+
+        The subscribe response is `{"jsonrpc":"2.0","result":"","id":}`.
+
+        Notifications arrive as `{"jsonrpc":"2.0","method":"supra_subscription","params":
+
+        {"subscription":"","result":}}`, reusing the same
+
+        serialization as the REST block endpoint so a single deserializer serves push and poll.
+
+
+        When the node configures `websocket_auth_tokens`, clients must send
+
+        `Authorization: Bearer `. Connection and subscription limits are enforced per token.'
+      operationId: supra_block_ws
+      responses:
+        '101':
+          description: Switching protocols; the connection is upgraded to a WebSocket.
+        '429':
+          description: Connection or subscription limit reached.
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                format: u-int32
+                minimum: 0
+              description: Seconds to wait before retrying.
+            X-WebSocket-Reject-Reason:
+              schema:
+                type: string
+              description: Reason the connection was rejected.
+        '503':
+          description: The Supra WebSocket endpoint is disabled on this node.

@@ -1,0 +1,1391 @@
+openapi: 3.2.0
+info:
+  title: Supra RPC Node Transactions API
+  description: '0.5.0
+
+    tag:supra_rpc_v11.5.2
+
+    commit_hash:5e9ea652
+
+    build_time:2026-08-25 08:38:29 +00:00
+
+    build_env:rustc 1.97.1 (8bab26f4f 2026-07-14),1.97.1-x86_64-unknown-linux-gnu'
+  contact:
+    name: Supra Labs
+    url: https://supra.com
+  version: 5e9ea652457cd48aba6b1505bdd59da27fec13f6
+servers:
+- url: /
+tags:
+- name: Transactions
+  description: Transactions Api
+paths:
+  /rpc/v1/transactions/chain_id:
+    get:
+      tags:
+      - Transactions
+      summary: Chain id (v1)
+      description: Fetch chain id
+      operationId: chain_id
+      responses:
+        '200':
+          description: Current chain id
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+  /rpc/v1/transactions/parameters:
+    get:
+      tags:
+      - Transactions
+      summary: Transaction parameters (v1)
+      description: Retrieve limits that a client must respect when composing a transaction.
+      operationId: transaction_parameter
+      responses:
+        '200':
+          description: Acceptable parameters for transaction submission
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionParameters'
+  /rpc/v1/transactions/submit:
+    post:
+      tags:
+      - Transactions
+      summary: Submit transaction (v1)
+      description: Submit a transaction to Supra.
+      operationId: submit_txn
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupraTransaction'
+        required: true
+      responses:
+        '200':
+          description: transaction submitted
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hash'
+      deprecated: true
+  /rpc/v2/transactions/estimate_gas_price:
+    get:
+      tags:
+      - Transactions
+      summary: Estimate gas price (v2)
+      description: Get statistics derived from the gas prices of recently executed transactions.
+      operationId: estimate_gas_price_v2
+      responses:
+        '200':
+          description: Returns the mean, median and maximum gas prices of recently executed transactions.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GasPriceResV2'
+      deprecated: true
+  /rpc/v2/transactions/simulate:
+    post:
+      tags:
+      - Transactions
+      summary: Simulate a transaction (v2)
+      operationId: simulate_txn_v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupraTransaction'
+        required: true
+      responses:
+        '200':
+          description: Simulate a transaction against the current state of the RPC node. The transaction must have an invalid signature.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionInfoV2'
+      deprecated: true
+  /rpc/v2/transactions/{hash}:
+    get:
+      tags:
+      - Transactions
+      summary: Get transaction by hash (v2)
+      description: Get information about a transaction by its hash.
+      operationId: transaction_by_hash_v2
+      parameters:
+      - name: hash
+        in: path
+        description: Hash of the transaction to lookup
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Transaction data of the given transaction hash
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionInfoV2'
+      deprecated: true
+  /rpc/v3/transactions/estimate_gas_price:
+    get:
+      tags:
+      - Transactions
+      summary: Estimate gas price (v3)
+      description: Get statistics derived from the gas prices of recently executed transactions and minimum configured gas price.
+      operationId: estimate_gas_price_v3
+      responses:
+        '200':
+          description: Returns the information related to gas price. This included minimum configured gas price as well as mean, median and maximum gas prices of recently executed transactions.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GasPriceResV3'
+  /rpc/v3/transactions/simulate:
+    post:
+      tags:
+      - Transactions
+      summary: Simulate a transaction (v3)
+      operationId: simulate_txn_v3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupraTransaction'
+            example:
+              Move:
+                raw_txn:
+                  sender: 3ef46383308ad31c00ce1ca02bf113a9327a94e302d934f32f70954bb4cba035
+                  sequence_number: 0
+                  payload:
+                    EntryFunction:
+                      module:
+                        address: '0x0000000000000000000000000000000000000000000000000000000000000001'
+                        name: supra_account
+                      function: transfer
+                      ty_args: []
+                      args:
+                      - - 234
+                        - 100
+                        - 210
+                        - 42
+                        - 5
+                        - 4
+                        - 135
+                        - 249
+                        - 11
+                        - 193
+                        - 212
+                        - 28
+                        - 224
+                        - 115
+                        - 170
+                        - 202
+                        - 20
+                        - 90
+                        - 51
+                        - 180
+                        - 133
+                        - 54
+                        - 138
+                        - 63
+                        - 213
+                        - 95
+                        - 209
+                        - 36
+                        - 173
+                        - 235
+                        - 38
+                        - 224
+                      - - 0
+                        - 45
+                        - 49
+                        - 1
+                        - 0
+                        - 0
+                        - 0
+                        - 0
+                  max_gas_amount: 500000
+                  gas_unit_price: 100
+                  expiration_timestamp_secs: 1841875694
+                  chain_id: 255
+                authenticator:
+                  Ed25519:
+                    public_key: '0x7b017e7c4b83e06ad2dab990ff3b091f9995a2a2610dee1d665dc8a2510b539f'
+                    signature: '0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+          application/x.supra.signed_transaction+bcs:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: u-int8
+                minimum: 0
+        required: true
+      responses:
+        '200':
+          description: Simulate a transaction against the current state of the RPC node. The transaction must have an invalid signature.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionInfoV2'
+  /rpc/v3/transactions/submit:
+    post:
+      tags:
+      - Transactions
+      summary: Submit transaction (v3)
+      description: Submit a transaction to Supra.
+      operationId: submit_txn_v3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupraTransaction'
+          application/x.supra.signed_transaction+bcs:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: u-int8
+                minimum: 0
+        required: true
+      responses:
+        '200':
+          description: transaction submitted
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hash'
+  /rpc/v3/transactions/{hash}:
+    get:
+      tags:
+      - Transactions
+      summary: Get transaction by hash (v3)
+      description: Get information about a transaction by its hash.
+      operationId: transaction_by_hash_v3
+      parameters:
+      - name: type
+        in: query
+        description: Transaction type to query. If missing any/all type of transactions will be looked for.
+        required: false
+        schema:
+          type: string
+          description: Type of the transaction to be queried.
+          enum:
+          - auto
+          - user
+          - meta
+          - record
+      - name: exclude_uncommitted
+        in: query
+        description: If set to `true` will exclude uncommitted transactions.
+        required: false
+        schema:
+          type: boolean
+      - name: hash
+        in: path
+        description: Hash of the transaction to lookup
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Transaction data of the given transaction hash
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionV3'
+  /rpc/v4/transactions/certificates:
+    get:
+      tags:
+      - Transactions
+      summary: Get transaction inclusion certificates by block height (v4)
+      description: 'Provides transaction inclusion certificates for the specified block height range. These
+
+        certificates enable verification that Move and EVM transaction Merkle root accumulator was
+
+        accepted by the consensus committee.
+
+
+        Both MoveVM and EVM transaction Merkle root accumulator is updated at every block. Each update
+
+        goes through a transaction inclusion certification phase, during which consensus committee
+
+        members vote on the proposed accumulator root.
+
+
+        Verifying these certificates allows one to conclude that a specific transaction was
+
+        submitted to and accepted by the Supra Network.'
+      operationId: transactions_inclusion_certificates_by_block_height_v4
+      parameters:
+      - name: start_height
+        in: query
+        description: Starting block height.
+        required: true
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+      - name: end_height
+        in: query
+        description: Ending block height.
+        required: true
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+      responses:
+        '200':
+          description: Transactions inclusion certificate for the given block height.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionsInclusionCertificates'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+        '404':
+          description: Requested data is not available.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/x-bcs:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+        '410':
+          description: Requested data has been pruned and is no longer available.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+            x-supra-oldest-block:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Block height of the oldest available transactions inclusion certificate.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/x-bcs:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+  /rpc/v4/transactions/{hash}:
+    get:
+      tags:
+      - Transactions
+      summary: Get transaction by hash (v4)
+      description: Get information about a transaction by its hash.
+      operationId: transaction_by_hash_v4
+      parameters:
+      - name: type
+        in: query
+        description: Transaction type to query. If missing any/all type of transactions will be looked for.
+        required: false
+        schema:
+          type: string
+          description: Type of the transaction to be queried.
+          enum:
+          - auto
+          - user
+          - meta
+          - record
+      - name: exclude_uncommitted
+        in: query
+        description: If set to `true` will exclude uncommitted transactions.
+        required: false
+        schema:
+          type: boolean
+      - name: include_proof
+        in: query
+        description: 'If set to `true`, includes the Merkle proof for the related transaction''s inclusion in the
+
+          executed transaction log.'
+        required: false
+        schema:
+          type: boolean
+      - name: hash
+        in: path
+        description: Hash of the transaction to lookup
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Transaction data of the given transaction hash
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionV4'
+components:
+  schemas:
+    EventV1:
+      type: object
+      description: On-chain event.
+      required:
+      - guid
+      - sequence_number
+      - type
+      - data
+      properties:
+        guid:
+          $ref: '#/components/schemas/Guid'
+          description: The globally unique identifier of this event stream.
+        sequence_number:
+          type: string
+        type:
+          type: string
+          description: The `MoveType` of the event
+        data:
+          description: The JSON representation of the event
+    TransactionsInclusionCertificates:
+      type: object
+      description: 'A collection of transaction inclusion certificates for a given range of block heights. The entires are ordered
+
+        by block height, with an entry being null if the certificate for that height is not available on the server.
+
+        If the missing heights are close to the current tip of the chain then they should become available soon. If they
+
+        are close to `X_SUPRA_OLDEST_BLOCK` then they may be in the process of being pruned.'
+      required:
+      - certificates
+      properties:
+        certificates:
+          type: array
+          items:
+            oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/Certificate_TransactionsInclusionCertificationData'
+    SignedTransaction:
+      type: object
+      description: Defines internal transactions(DKG and Oracle) coupled with signer data.
+      required:
+      - raw_txn
+      - authenticator
+      properties:
+        raw_txn:
+          type: object
+          description: The raw transaction
+        authenticator:
+          type: object
+          description: Public key and signature to authenticate
+    TxExecutionStatus:
+      type: string
+      enum:
+      - Success
+      - Fail
+      - Invalid
+      - PendingAfterExecution
+      - Pending
+    BlockMetadataInfoV4:
+      type: object
+      description: Details of block metadata transaction execution
+      required:
+      - hash
+      - output
+      - status
+      properties:
+        hash:
+          $ref: '#/components/schemas/Hash'
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/BlockHeaderInfo'
+            description: 'Metadata about the block containing the transaction, if any.
+
+              This field will not be set for transactions that are returned as a part of a block.'
+        output:
+          $ref: '#/components/schemas/TransactionOutputV4'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
+        inclusion_proof:
+          $ref: '#/components/schemas/TransactionInclusionProof'
+    EvmTransferKind:
+      type: string
+      enum:
+      - call
+      - create
+      - create2
+      - selfdestruct
+    TransactionV3:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/TransactionInfoV2'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - user
+      - allOf:
+        - $ref: '#/components/schemas/TransactionInfoV2'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - automated
+      - allOf:
+        - $ref: '#/components/schemas/BlockMetadataInfoV3'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - block_metadata
+      - allOf:
+        - $ref: '#/components/schemas/AutomationRecordInfoV3'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - automation_record
+    SignerData:
+      type: object
+      description: Signer information of the [crate::delegates::UnsignedSmrTransaction].
+      required:
+      - signer
+      - signature
+      properties:
+        signer:
+          type: object
+          description: PublicKey of the transaction sender and signer
+        signature:
+          type: object
+          description: Signature of the transaction by signer
+    Hash:
+      type: string
+      description: Hex encoded hash
+    BlockMetadataInfoV3:
+      type: object
+      description: Details of block metadata transaction execution
+      required:
+      - hash
+      - output
+      - status
+      properties:
+        hash:
+          $ref: '#/components/schemas/Hash'
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/BlockHeaderInfo'
+            description: 'Metadata about the block containing the transaction, if any.
+
+              This field will not be set for transactions that are returned as a part of a block.'
+        output:
+          $ref: '#/components/schemas/TransactionOutputV1'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
+    TransactionParameters:
+      type: object
+      required:
+      - max_transaction_time_to_live_seconds
+      properties:
+        max_transaction_time_to_live_seconds:
+          type: integer
+          format: u-int64
+          minimum: 0
+    TransactionOutputV1:
+      oneOf:
+      - type: object
+        required:
+        - Dkg
+        properties:
+          Dkg:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: string
+        enum:
+        - Empty
+      - type: object
+        required:
+        - Move
+        properties:
+          Move:
+            $ref: '#/components/schemas/MoveTransactionOutputV1'
+      - type: object
+        required:
+        - Oracle
+        properties:
+          Oracle:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: object
+        required:
+        - Evm
+        properties:
+          Evm:
+            $ref: '#/components/schemas/EvmTransactionOutput'
+      description: '[crate::v1::TransactionOutputV1] with all fields in human-readable format.'
+    EventV2:
+      type: object
+      description: On-chain event v2.
+      required:
+      - guid
+      - sequence_number
+      - type
+      - data
+      - hash
+      properties:
+        guid:
+          $ref: '#/components/schemas/Guid'
+          description: The globally unique identifier of this event stream.
+        sequence_number:
+          type: string
+        type:
+          type: string
+          description: The `MoveType` of the event
+        data:
+          description: The JSON representation of the event
+        hash:
+          type: string
+          description: The hash of the event, derived from `RLP(event)` + `keccak256`.
+    TransactionsInclusionCertificationData:
+      type: object
+      description: 'Data payload for transaction inclusion certificate.
+
+
+        Certified by the transaction inclusion certifier to prove the both MoveVM and EVM
+
+        merkle accumulator of a specific block height.'
+      required:
+      - movevm_merkle_accumulator_tree_root
+      - evm_merkle_accumulator_tree_root
+      - block_height
+      - epoch_id
+      properties:
+        movevm_merkle_accumulator_tree_root:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded root hash of the MoveVM merkle accumulator tree.
+        evm_merkle_accumulator_tree_root:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded root hash of the EVM merkle accumulator tree.
+        block_height:
+          $ref: '#/components/schemas/u64'
+          description: The block height for which the merkle roots are certified.
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: The epoch identifier.
+    CertificateThresholdType:
+      type: string
+      enum:
+      - Validity
+      - Quorum
+      - Unanimous
+      - BcftValidity
+      - BcftQuorum
+      - BcftFallbackViewChange
+      - ClanMajority
+    EvmTransferOperation:
+      type: object
+      description: This is a convenience structure wrapping [`TransferOperation`] to implement (de)serialization logic.
+      required:
+      - kind
+      - from
+      - to
+      - value
+      properties:
+        kind:
+          $ref: '#/components/schemas/EvmTransferKind'
+          description: Source of the transfer call.
+        from:
+          type: string
+          description: Sender of the transfer.
+        to:
+          type: string
+          description: Receiver of the transfer.
+        value:
+          type: string
+          description: Value of the transfer.
+    SupraTransaction:
+      oneOf:
+      - type: object
+        required:
+        - Smr
+        properties:
+          Smr:
+            $ref: '#/components/schemas/SignedSmrTransaction'
+      - type: object
+        required:
+        - Move
+        properties:
+          Move:
+            $ref: '#/components/schemas/SignedTransaction'
+      description: Transaction variants supported by Supra.
+    TransactionOutputV4:
+      oneOf:
+      - type: object
+        required:
+        - Dkg
+        properties:
+          Dkg:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: string
+        enum:
+        - Empty
+      - type: object
+        required:
+        - Move
+        properties:
+          Move:
+            $ref: '#/components/schemas/MoveTransactionOutputV4'
+      - type: object
+        required:
+        - Oracle
+        properties:
+          Oracle:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: object
+        required:
+        - Evm
+        properties:
+          Evm:
+            $ref: '#/components/schemas/EvmTransactionOutput'
+      description: '[crate::v4::TransactionOutputV4] with all fields in human-readable format.'
+    AccumulatorProof:
+      type: object
+      description: 'A proof that can be used authenticate an element in an accumulator given trusted root hash. For
+
+        example, both `TransactionInclusionProof` and `EventEmissionProof` can be constructed on top of
+
+        this structure.'
+      required:
+      - siblings
+      properties:
+        siblings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Hash'
+          description: 'All siblings in this proof, including the default ones. Siblings are ordered from the bottom
+
+            level to the root level.'
+    MoveTransactionOutputV1:
+      type: object
+      description: The execution output of a Move transaction.
+      required:
+      - gas_used
+      - events
+      - vm_status
+      properties:
+        gas_used:
+          type: integer
+          format: u-int64
+          description: The gas used by the transaction.
+          minimum: 0
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventV1'
+        vm_status:
+          type: string
+          description: A message summarizing the execution result produced by the MoveVM.
+    TransactionV4:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/TransactionInfoV4'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - user
+      - allOf:
+        - $ref: '#/components/schemas/TransactionInfoV4'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - automated
+      - allOf:
+        - $ref: '#/components/schemas/BlockMetadataInfoV4'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - block_metadata
+      - allOf:
+        - $ref: '#/components/schemas/AutomationRecordInfoV4'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - automation_record
+    EpochId:
+      type: object
+      required:
+      - chain_id
+      - epoch
+      properties:
+        chain_id:
+          oneOf:
+          - type: integer
+            format: u-int8
+            minimum: 0
+          description: Unique identifier for this instance of the SMR.
+        epoch:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the epoch within the context of `chain_id`.
+    Guid:
+      type: object
+      description: A globally unique identifier derived from the sender's address and a counter
+      required:
+      - creation_number
+      - account_address
+      properties:
+        creation_number:
+          type: string
+          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
+        account_address:
+          $ref: '#/components/schemas/AccountAddress'
+          description: Address that created the GUID
+    BlockHeaderInfo:
+      type: object
+      description: Metadata about a Supra block.
+      required:
+      - author
+      - hash
+      - height
+      - parent
+      - timestamp
+      - view
+      properties:
+        author:
+          $ref: '#/components/schemas/Identity'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        height:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Number of blocks before this block in the chain (including the genesis block).
+        parent:
+          $ref: '#/components/schemas/Hash'
+        timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+        view:
+          $ref: '#/components/schemas/View'
+    UnsignedSmrTransaction:
+      type: object
+      description: Defines unsigned transaction enclosing only header and payload information.
+      required:
+      - header
+      - payload
+      properties:
+        header:
+          $ref: '#/components/schemas/SmrTransactionHeader'
+          description: Header of the transaction containing meta information of transaction.
+        payload:
+          type: object
+          description: Actual payload of the transaction tagged based on the protocol type.
+    MoveTransactionOutputV4:
+      type: object
+      description: The execution output of a Move transaction.
+      required:
+      - gas_used
+      - events
+      - vm_status
+      properties:
+        gas_used:
+          type: integer
+          format: u-int64
+          description: The gas used by the transaction.
+          minimum: 0
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventV2'
+        vm_status:
+          type: string
+          description: A message summarizing the execution result produced by the MoveVM.
+    u64:
+      type: integer
+      format: u-int64
+      minimum: 0
+    SmrTimestamp:
+      type: object
+      required:
+      - timestamp
+      properties:
+        timestamp:
+          type: integer
+          format: u-int64
+          description: The timestamp as measured in the number of microseconds since the unix epoch.
+          minimum: 0
+    ErrResp:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+    SignedSmrTransaction:
+      type: object
+      description: Defines internal transactions (DKG and Oracle) coupled with signer data.
+      required:
+      - signer_data
+      - transaction
+      properties:
+        signer_data:
+          $ref: '#/components/schemas/SignerData'
+          description: Signer data on the transaction.
+        transaction:
+          $ref: '#/components/schemas/UnsignedSmrTransaction'
+          description: Unsigned internal transaction.
+    AccountAddress:
+      type: string
+      description: Hex encoded account address.
+    TransactionInclusionProof:
+      type: object
+      description: Proof of a transaction's inclusion in the merkle accumulator tree.
+      required:
+      - proof
+      - leaf_hash_value
+      - merkle_root_hash_value
+      - leaf_index
+      - certified_at_height
+      properties:
+        proof:
+          $ref: '#/components/schemas/AccumulatorProof'
+          description: The accumulator proof for the transaction.
+        leaf_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded hash value of the leaf node.
+        merkle_root_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded merkle root hash value.
+        leaf_index:
+          type: integer
+          format: u-int64
+          description: The leaf index in the accumulator tree.
+          minimum: 0
+        events_tree_merkle_root_hash_value:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/Hash'
+            description: Hex encoded merkle root hash value of the events tree, if available.
+        events_leaves_hash_values:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/Hash'
+          description: Hex encoded hash values of the events tree leaves, if available.
+        certified_at_height:
+          $ref: '#/components/schemas/u64'
+          description: Block height at which the Merkle root was certified.
+    GasPriceResV2:
+      type: object
+      required:
+      - mean_gas_price
+      - max_gas_price
+      - median_gas_price
+      properties:
+        mean_gas_price:
+          type: integer
+          minimum: 0
+        max_gas_price:
+          type: integer
+          minimum: 0
+        median_gas_price:
+          type: integer
+          minimum: 0
+    TransactionInfoV4:
+      type: object
+      description: Information about a Supra transaction.
+      required:
+      - authenticator
+      - hash
+      - header
+      - payload
+      - status
+      properties:
+        authenticator:
+          type: object
+          description: The cryptographic material that was submitted with the transaction, according to its type.
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/BlockHeaderInfo'
+            description: 'Metadata about the block containing the transaction, if any. This field should
+
+              not be set if this [TransactionInfoV4] is yet to be included in a [Block].'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        header:
+          $ref: '#/components/schemas/SmrTransactionHeader'
+        payload:
+          type: object
+          description: The deserialized payload of the transaction according to its type.
+        output:
+          oneOf:
+          - $ref: '#/components/schemas/TransactionOutputV4'
+          - type: 'null'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
+        inclusion_proof:
+          $ref: '#/components/schemas/TransactionInclusionProof'
+    TransactionInfoV2:
+      type: object
+      description: Information about a Supra transaction.
+      required:
+      - authenticator
+      - hash
+      - header
+      - payload
+      - status
+      properties:
+        authenticator:
+          type: object
+          description: The cryptographic material that was submitted with the transaction, according to its type.
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/BlockHeaderInfo'
+            description: 'Metadata about the block containing the transaction, if any. This field should
+
+              not be set if this [TransactionInfoV2] is yet to be included in a [Block].'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        header:
+          $ref: '#/components/schemas/SmrTransactionHeader'
+        payload:
+          type: object
+          description: The deserialized payload of the transaction according to its type.
+        output:
+          oneOf:
+          - $ref: '#/components/schemas/TransactionOutputV1'
+          - type: 'null'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
+    EvmTransactionOutput:
+      oneOf:
+      - type: object
+        description: Returned successfully
+        required:
+        - Success
+        properties:
+          Success:
+            type: object
+            description: Returned successfully
+            required:
+            - reason
+            - gas_used
+            - gas_refunded
+            - logs
+            - output
+            properties:
+              reason: {}
+              gas_used:
+                type: integer
+                format: u-int64
+                minimum: 0
+              gas_refunded:
+                type: integer
+                format: u-int64
+                minimum: 0
+              logs: {}
+              output: {}
+              transfers:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EvmTransferOperation'
+                description: A list of transfer operations during the transaction execution.
+      - type: object
+        description: Reverted by `REVERT` opcode that doesn't spend all gas.
+        required:
+        - Revert
+        properties:
+          Revert:
+            type: object
+            description: Reverted by `REVERT` opcode that doesn't spend all gas.
+            required:
+            - gas_used
+            - output
+            properties:
+              gas_used:
+                type: integer
+                format: u-int64
+                minimum: 0
+              output:
+                type: string
+      - type: object
+        description: Reverted for various reasons and spend all gas.
+        required:
+        - Halt
+        properties:
+          Halt:
+            type: object
+            description: Reverted for various reasons and spend all gas.
+            required:
+            - reason
+            - gas_used
+            properties:
+              reason: {}
+              gas_used:
+                type: integer
+                format: u-int64
+                description: Halting will spend all the gas, and will be equal to gas_limit.
+                minimum: 0
+      - type: object
+        description: Error occurred during execution.
+        required:
+        - Error
+        properties:
+          Error:
+            type: object
+            description: Error occurred during execution.
+            required:
+            - message
+            properties:
+              message:
+                type: string
+      description: API representation of the execution output of an Evm transaction.
+    Identity:
+      type: string
+      description: Hex encoded identity.
+    View:
+      type: object
+      required:
+      - epoch_id
+      - round
+      properties:
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: Identifier of the consensus epoch.
+        round:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the consensus round.
+    GasPriceResV3:
+      type: object
+      required:
+      - mean_gas_price
+      - max_gas_price
+      - median_gas_price
+      - min_configured_gas_price
+      properties:
+        mean_gas_price:
+          type: integer
+          minimum: 0
+        max_gas_price:
+          type: integer
+          minimum: 0
+        median_gas_price:
+          type: integer
+          minimum: 0
+        min_configured_gas_price:
+          type: integer
+          format: u-int64
+          minimum: 0
+    Certificate_TransactionsInclusionCertificationData:
+      type: object
+      required:
+      - certifying_committee
+      - data
+      - kind
+      - signature
+      - voters
+      properties:
+        certifying_committee:
+          $ref: '#/components/schemas/Hash'
+          description: The hash digest of the [Committee] that created this [sosmr::Certificate].
+        data:
+          $ref: '#/components/schemas/TransactionsInclusionCertificationData'
+          description: The data from which `signature` is derived.
+        kind:
+          $ref: '#/components/schemas/CertificateThresholdType'
+          description: 'The type of threshold that `signature` satisfies with respect to the [Committee]
+
+            that created this [sosmr::Certificate].'
+        signature:
+          type: object
+          description: A signature on the [CertificateSignatureData] transformation of `data`.
+        voters:
+          type: array
+          items:
+            type: boolean
+          description: 'Identifies the nodes whose signatures were used to construct `signature`.
+
+            Each index corresponds to an index in the vector of public keys of the
+
+            participants in the corresponding committee, with its value being set
+
+            to `true` if the participant''s signature was included in `signature`.'
+    SmrTransactionHeader:
+      type: object
+      required:
+      - chain_id
+      - expiration_timestamp
+      - sender
+      - sequence_number
+      - gas_unit_price
+      - max_gas_amount
+      properties:
+        chain_id:
+          type: integer
+          format: u-int64
+          description: 'The unique identifier for the instance of the Supra chain that this transaction should
+
+            be executed upon.'
+          minimum: 0
+        expiration_timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+          description: The time at which this transaction should be discarded if it has not been executed.
+        sender:
+          $ref: '#/components/schemas/AccountAddress'
+          description: The standardized representation of the sender's account address in the target VM.
+        sequence_number:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: The sequence number of the sender's account in the target VM.
+        gas_unit_price:
+          type: integer
+          description: The amount of Supra that the sender is willing to pay per unit of gas.
+          minimum: 0
+        max_gas_amount:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: The maximum amount of gas that the sender is willing to spend.

@@ -1,0 +1,954 @@
+openapi: 3.2.0
+info:
+  title: Supra RPC Node Consensus API
+  description: '0.5.0
+
+    tag:supra_rpc_v11.5.2
+
+    commit_hash:5e9ea652
+
+    build_time:2026-08-25 08:38:29 +00:00
+
+    build_env:rustc 1.97.1 (8bab26f4f 2026-07-14),1.97.1-x86_64-unknown-linux-gnu'
+  contact:
+    name: Supra Labs
+    url: https://supra.com
+  version: 5e9ea652457cd48aba6b1505bdd59da27fec13f6
+servers:
+- url: /
+tags:
+- name: Consensus
+paths:
+  /rpc/v2/consensus/block:
+    get:
+      tags:
+      - Consensus
+      summary: Get latest consensus block (v2)
+      description: 'Get the BCS bytes of the latest consensus block.
+
+
+        Returns an HTTP response containing the BCS bytes of the requested ConsensusBlock, optionally
+
+        including the BCS bytes of the associated transaction batches.
+
+        - If the block is found, responds with [StatusCode::OK] and a binary body containing the serialized block data.
+
+        - If the block is not found, responds with [StatusCode::NOT_FOUND] and an empty body.'
+      operationId: latest_consensus_block_v2
+      responses:
+        '200':
+          description: Binary representation of the latest consensus block.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BinaryData'
+        '404':
+          description: No block found.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BinaryData'
+      deprecated: true
+  /rpc/v2/consensus/block/height/{height}:
+    get:
+      tags:
+      - Consensus
+      summary: Get consensus block by height (v2)
+      description: 'Get the BCS bytes of the consensus block at the requested height.
+
+
+        Returns an HTTP response containing the BCS bytes of the requested ConsensusBlock, optionally
+
+        including the BCS bytes of the associated transaction batches.
+
+        - If the block is found, responds with [StatusCode::OK] and a binary body containing the serialized block data.
+
+        - If the block is not found, responds with [StatusCode::NOT_FOUND] and an empty body.'
+      operationId: consensus_block_v2
+      parameters:
+      - name: height
+        in: path
+        description: Block height
+        required: true
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+      - name: with_batches
+        in: query
+        description: If true, returns all batches of transactions with certificates contained in this block.
+        required: true
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Binary representation of the consensus block at the requested height.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BinaryData'
+        '404':
+          description: No block for for the requested height.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BinaryData'
+      deprecated: true
+  /rpc/v2/consensus/committee_authorization/{epoch}:
+    get:
+      tags:
+      - Consensus
+      summary: Get committee authorization (v2)
+      description: 'Get the BCS bytes of the Committee Authorization for the requested epoch.
+
+
+        Returns an HTTP response containing the BCS bytes of the requested CommitteeAuthorization.
+
+        - If the authorization is found, responds with [StatusCode::OK] and a binary body containing the serialized authorization data.
+
+        - If the authorization is not found, responds with [StatusCode::NOT_FOUND] and an empty body.'
+      operationId: committee_authorization_v2
+      parameters:
+      - name: epoch
+        in: path
+        description: Epoch
+        required: true
+        schema:
+          $ref: '#/components/schemas/u64'
+      responses:
+        '200':
+          description: Binary representation of the committee authorization for the requested epoch.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BinaryData'
+        '404':
+          description: No committee authorization found for the requested epoch.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BinaryData'
+      deprecated: true
+  /rpc/v4/consensus/block:
+    get:
+      tags:
+      - Consensus
+      summary: Get latest consensus block (v4)
+      description: 'Get the latest consensus block, encoded according to the specified Accept header. Defaults to JSON.
+
+
+        Authenticated. Contact your RPC provider for access.'
+      operationId: latest_consensus_block_v4
+      responses:
+        '200':
+          description: Binary representation of the latest consensus block.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsensusBlock'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+        '404':
+          description: No block found.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                default: null
+            application/x-bcs:
+              schema:
+                default: null
+            application/octet-stream:
+              schema:
+                default: null
+  /rpc/v4/consensus/block/height/{height}:
+    get:
+      tags:
+      - Consensus
+      summary: Get consensus block by height (v4)
+      description: 'Get the consensus block at the requested height, encoded according to the specified
+
+        Accept header. Defaults to JSON.
+
+
+        Authenticated. Contact your RPC provider for access.'
+      operationId: consensus_block_v4
+      parameters:
+      - name: height
+        in: path
+        description: Block height
+        required: true
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+      - name: with_batches
+        in: query
+        description: If true, returns all batches of transactions with certificates contained in this block.
+        required: true
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: The consensus block for the given height.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: 'null'
+                - $ref: '#/components/schemas/ConsensusBlock'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+        '404':
+          description: No consensus block found for the requested height.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                default: null
+            application/x-bcs:
+              schema:
+                default: null
+            application/octet-stream:
+              schema:
+                default: null
+  /rpc/v4/consensus/committee_authorization/{epoch}:
+    get:
+      tags:
+      - Consensus
+      summary: Get Committee Authorization (v4)
+      description: 'Get the Committee Authorization for the requested epoch, encoded according to the specified
+
+        Accept header. Defaults to JSON.
+
+
+        Authenticated. Contact your RPC provider for access.'
+      operationId: committee_authorization_v4
+      parameters:
+      - name: epoch
+        in: path
+        description: Epoch
+        required: true
+        schema:
+          $ref: '#/components/schemas/u64'
+      responses:
+        '200':
+          description: Committee Authorization for the requested epoch.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedCommittee'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+        '404':
+          description: No Committee Authorization found for the requested epoch.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                default: null
+            application/x-bcs:
+              schema:
+                default: null
+            application/octet-stream:
+              schema:
+                default: null
+  /rpc/v4/consensus/committees/{epoch}:
+    get:
+      tags:
+      - Consensus
+      summary: Get Authorized Committee (v4)
+      description: 'Get the Authorized Committee for the requested epoch, encoded according to the specified
+
+        Accept header. Defaults to JSON.'
+      operationId: committees_v4
+      parameters:
+      - name: epoch
+        in: path
+        description: Epoch number for which the authorized committee is requested
+        required: true
+        schema:
+          $ref: '#/components/schemas/u64'
+      responses:
+        '200':
+          description: Authorized consensus committee for the given epoch
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedCommittee'
+            application/x-bcs:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  type: integer
+                  format: u-int8
+                  minimum: 0
+        '400':
+          description: The specified epoch does not exist
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/x-bcs:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+components:
+  schemas:
+    ConsensusBlock:
+      type: object
+      description: The API representation of a Supra Certified Consensus block.
+      required:
+      - block
+      - batches
+      properties:
+        block:
+          $ref: '#/components/schemas/CertifiedBlock'
+        batches:
+          type: object
+          description: 'The API representations of all batches of transactions
+
+            that were finalized by this block in the order that they were executed.'
+    EpochInfo:
+      type: object
+      description: Metadata about an epoch.
+      required:
+      - id
+      - start_height
+      - start_time
+      properties:
+        id:
+          $ref: '#/components/schemas/EpochId'
+          description: The unique identifier for this epoch.
+        start_height:
+          type: integer
+          format: u-int64
+          description: The height of the final block of the previous epoch.
+          minimum: 0
+        start_time:
+          $ref: '#/components/schemas/SmrTimestamp'
+          description: The timestamp of the final block of the previous epoch.
+    AuthorizedCommitteeV1:
+      type: object
+      description: A V1 authorized committee.
+      required:
+      - authorization
+      - committee
+      properties:
+        authorization:
+          $ref: '#/components/schemas/CommitteeAuthorization'
+          description: The authorization certificate for this committee.
+        committee:
+          $ref: '#/components/schemas/CommitteeV1'
+          description: The Committee authorized by the committee authorization.
+    BlockHeader:
+      type: object
+      required:
+      - author
+      - height
+      - parent
+      - timestamp
+      - view
+      properties:
+        author:
+          $ref: '#/components/schemas/Identity'
+          description: Public identity of the node that proposed the block.
+        height:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Number of blocks before this block in the chain (including the genesis block).
+        parent:
+          $ref: '#/components/schemas/Hash'
+          description: Hash digest of the previous block in the chain.
+        timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+          description: Local time at which `author` created this block in microseconds from the UNIX epoch.
+        view:
+          $ref: '#/components/schemas/View'
+          description: Identifier of the view for which this block was proposed.
+    Certificate_BlockVoteInfo:
+      type: object
+      required:
+      - certifying_committee
+      - data
+      - kind
+      - signature
+      - voters
+      properties:
+        certifying_committee:
+          $ref: '#/components/schemas/Hash'
+          description: The hash digest of the [Committee] that created this [sosmr::Certificate].
+        data:
+          $ref: '#/components/schemas/BlockVoteInfo'
+          description: The data from which `signature` is derived.
+        kind:
+          $ref: '#/components/schemas/CertificateThresholdType'
+          description: 'The type of threshold that `signature` satisfies with respect to the [Committee]
+
+            that created this [sosmr::Certificate].'
+        signature:
+          type: object
+          description: A signature on the [CertificateSignatureData] transformation of `data`.
+        voters:
+          type: array
+          items:
+            type: boolean
+          description: 'Identifies the nodes whose signatures were used to construct `signature`.
+
+            Each index corresponds to an index in the vector of public keys of the
+
+            participants in the corresponding committee, with its value being set
+
+            to `true` if the participant''s signature was included in `signature`.'
+    BlockInfo:
+      type: object
+      description: Metadata of a block including its digest.
+      required:
+      - hash
+      - header
+      properties:
+        hash:
+          $ref: '#/components/schemas/Hash'
+          description: Digest of the related block.
+        header:
+          $ref: '#/components/schemas/BlockHeader'
+          description: Other metadata of the related block.
+    VoteType:
+      type: string
+      description: 'The different types of valid vote messages in Moonshot.
+
+        '
+      enum:
+      - Commit
+      - PrepareFallback
+      - PrepareNormal
+      - PrepareOptimistic
+    Hash:
+      type: string
+      description: Hex encoded hash
+    SmrBlock:
+      type: object
+      description: A Supra Moonshot block.
+      required:
+      - digest
+      - header
+      - payload
+      properties:
+        digest:
+          $ref: '#/components/schemas/Hash'
+          description: 'Cached digest. Must be updated if `header` or `payload` are ever updated.
+
+            We cache block digests because they are used often. This lets us avoid
+
+            the overhead of recomputing the digest each time.'
+        header:
+          $ref: '#/components/schemas/BlockHeader'
+          description: Metadata.
+        payload:
+          type: object
+          description: Payload.
+    CommitteeV1:
+      type: object
+      description: 'A V1 committee of validators operating as a subset of the Supra blockchain network.
+
+        Each Committee is assigned to perform a task for the duration of its associated epoch.'
+      required:
+      - bls_threshold_public_keys
+      - epoch_info
+      - members
+      properties:
+        bls_threshold_public_keys:
+          type: object
+          description: The BLS threshold public keys of the Committee for each threshold type.
+          additionalProperties:
+            type: string
+          propertyNames:
+            type: string
+            enum:
+            - Validity
+            - Quorum
+            - Unanimous
+            - BcftValidity
+            - BcftQuorum
+            - BcftFallbackViewChange
+            - ClanMajority
+        epoch_info:
+          $ref: '#/components/schemas/EpochInfo'
+          description: Metadata about the epoch for which this Committee is authorized.
+        members:
+          type: object
+          description: 'An ordered map of the ids of the nodes participating in this Committee to their
+
+            remaining metadata.'
+          additionalProperties:
+            $ref: '#/components/schemas/ValidatorV1'
+          propertyNames:
+            type: string
+            description: Hex encoded identity.
+    CommitteeV0:
+      type: object
+      description: 'A committee of validators operating as a subset of the Supra blockchain network.
+
+        Each Committee is assigned to perform a task for the duration of its associated epoch.'
+      required:
+      - epoch_info
+      - members
+      properties:
+        bls_threshold_public_key:
+          type:
+          - string
+          - 'null'
+          description: The BLS threshold public key of the Committee.
+        epoch_info:
+          $ref: '#/components/schemas/EpochInfo'
+          description: Metadata about the epoch for which this Committee is authorized.
+        members:
+          type: object
+          description: 'An ordered map of the ids of the nodes participating in this Committee to their
+
+            remaining metadata.'
+          additionalProperties:
+            $ref: '#/components/schemas/ValidatorV0'
+          propertyNames:
+            type: string
+            description: Hex encoded identity.
+    CertificateThresholdType:
+      type: string
+      enum:
+      - Validity
+      - Quorum
+      - Unanimous
+      - BcftValidity
+      - BcftQuorum
+      - BcftFallbackViewChange
+      - ClanMajority
+    AuthorizedCommitteeV0:
+      type: object
+      description: A V0 authorized committee.
+      required:
+      - authorization
+      - committee
+      properties:
+        authorization:
+          $ref: '#/components/schemas/CommitteeAuthorization'
+          description: The authorization certificate for this committee.
+        committee:
+          $ref: '#/components/schemas/CommitteeV0'
+          description: The Committee authorized by the committee authorization.
+    ValidatorPublicKeys:
+      type: object
+      description: 'The public keys held by a Supra validator.
+
+
+        Intended to be stored in an unencrypted JSON file as a part of the validator''s public identity
+
+        for easy access by the operator. Also intended to be published on-chain as part of the validator''s
+
+        metadata.'
+      required:
+      - network_key
+      - supra_keys
+      properties:
+        network_key:
+          type: string
+          description: The hex encoded public key corresponding to the network key.
+        supra_keys:
+          oneOf:
+          - type: object
+            required:
+            - bls_multisig_key
+            - bls_threshold_key_shares
+            - class_group_key
+            - ed25519_key
+            properties:
+              bls_multisig_key:
+                type: string
+                description: The hex encoded BLS multisig public key.
+              bls_threshold_key_shares:
+                type: object
+                description: The hex encoded BLS threshold public key shares for each threshold type.
+                additionalProperties:
+                  type: string
+                propertyNames:
+                  type: string
+                  enum:
+                  - Validity
+                  - Quorum
+                  - Unanimous
+                  - BcftValidity
+                  - BcftQuorum
+                  - BcftFallbackViewChange
+                  - ClanMajority
+              class_group_key:
+                type: string
+                description: The hex encoded class group public key.
+              ed25519_key:
+                type: string
+                description: The hex encoded ED25519 public key.
+          description: The public keys corresponding to the Supra-written code keys.
+    CertifiedBlock:
+      type: object
+      description: 'An [SmrBlock] certified by an [SmrQC].
+
+        '
+      required:
+      - block
+      - qc
+      properties:
+        block:
+          $ref: '#/components/schemas/SmrBlock'
+        qc:
+          $ref: '#/components/schemas/SmrQC'
+    SmrQC:
+      type: object
+      required:
+      - certificate
+      properties:
+        certificate:
+          $ref: '#/components/schemas/Certificate_BlockVoteInfo'
+          description: 'A multisig or threshold signature proving that at least 2f+1 validators
+
+            voted for this block.'
+    EpochId:
+      type: object
+      required:
+      - chain_id
+      - epoch
+      properties:
+        chain_id:
+          oneOf:
+          - type: integer
+            format: u-int8
+            minimum: 0
+          description: Unique identifier for this instance of the SMR.
+        epoch:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the epoch within the context of `chain_id`.
+    CommitteeAuthorization:
+      type: object
+      description: 'A certificate indicating that the Committee with the hash digest contained in the
+
+        related committee info is authorized to govern the related epoch.'
+      required:
+      - certificate
+      properties:
+        certificate:
+          $ref: '#/components/schemas/Certificate_CommitteeInfo'
+    ValidatorV0:
+      type: object
+      description: Information about a validator participating in a Committee.
+      required:
+      - ed25519_public_key
+      - stake
+      properties:
+        bls_public_key_share:
+          type:
+          - string
+          - 'null'
+          description: The BLS public key share for consensus, if any.
+        dkg_node_number:
+          type:
+          - integer
+          - 'null'
+          format: u-int32
+          description: The position of the node in the DKG committee, if any.
+          minimum: 0
+        ed25519_public_key:
+          type: string
+          description: The ED25519 public key for consensus.
+        stake:
+          type: integer
+          format: u-int64
+          description: Stake of the validator.
+          minimum: 0
+    AuthorizedCommittee:
+      oneOf:
+      - type: object
+        required:
+        - V0
+        properties:
+          V0:
+            $ref: '#/components/schemas/AuthorizedCommitteeV0'
+      - type: object
+        required:
+        - V1
+        properties:
+          V1:
+            $ref: '#/components/schemas/AuthorizedCommitteeV1'
+      description: A versioned authorized committee, wrapping either V0 or V1.
+    u64:
+      type: integer
+      format: u-int64
+      minimum: 0
+    SmrTimestamp:
+      type: object
+      required:
+      - timestamp
+      properties:
+        timestamp:
+          type: integer
+          format: u-int64
+          description: The timestamp as measured in the number of microseconds since the unix epoch.
+          minimum: 0
+    ErrResp:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+    AccountAddress:
+      type: string
+      description: Hex encoded account address.
+    BlockVoteInfo:
+      type: object
+      description: Metadata of a Moonshot consensus vote.
+      required:
+      - block
+      - kind
+      properties:
+        block:
+          $ref: '#/components/schemas/BlockInfo'
+          description: Metadata of the block being voted for.
+        kind:
+          $ref: '#/components/schemas/VoteType'
+          description: The type of this vote. See `VoteType`.
+    ValidatorV1:
+      type: object
+      description: Information about a validator participating in a V1 Committee.
+      required:
+      - keys
+      - stake
+      - stake_pool_address
+      properties:
+        dkg_node_number:
+          type:
+          - integer
+          - 'null'
+          format: u-int32
+          description: The position of the node in the DKG committee, if any.
+          minimum: 0
+        keys:
+          $ref: '#/components/schemas/ValidatorPublicKeys'
+          description: The public keys used by the validator.
+        stake:
+          type: integer
+          format: u-int64
+          description: Stake of the validator.
+          minimum: 0
+        stake_pool_address:
+          $ref: '#/components/schemas/AccountAddress'
+          description: The Move account address of the validator's stake pool.
+    Certificate_CommitteeInfo:
+      type: object
+      required:
+      - certifying_committee
+      - data
+      - kind
+      - signature
+      - voters
+      properties:
+        certifying_committee:
+          $ref: '#/components/schemas/Hash'
+          description: The hash digest of the [Committee] that created this [sosmr::Certificate].
+        data:
+          $ref: '#/components/schemas/CommitteeInfo'
+          description: The data from which `signature` is derived.
+        kind:
+          $ref: '#/components/schemas/CertificateThresholdType'
+          description: 'The type of threshold that `signature` satisfies with respect to the [Committee]
+
+            that created this [sosmr::Certificate].'
+        signature:
+          type: object
+          description: A signature on the [CertificateSignatureData] transformation of `data`.
+        voters:
+          type: array
+          items:
+            type: boolean
+          description: 'Identifies the nodes whose signatures were used to construct `signature`.
+
+            Each index corresponds to an index in the vector of public keys of the
+
+            participants in the corresponding committee, with its value being set
+
+            to `true` if the participant''s signature was included in `signature`.'
+    CommitteeInfo:
+      type: object
+      description: Metadata about a Committee required to construct a committee authorization.
+      required:
+      - epoch_id
+      - hash
+      properties:
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: The epoch-id of the related Committee.
+        hash:
+          $ref: '#/components/schemas/Hash'
+          description: The hash digest of the related Committee.
+    Identity:
+      type: string
+      description: Hex encoded identity.
+    View:
+      type: object
+      required:
+      - epoch_id
+      - round
+      properties:
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: Identifier of the consensus epoch.
+        round:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the consensus round.
+    BinaryData:
+      description: A type reserved for internal use to represent [HttpResponse] with binary data.
+      default: null

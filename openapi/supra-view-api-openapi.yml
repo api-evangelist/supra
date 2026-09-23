@@ -1,0 +1,263 @@
+openapi: 3.2.0
+info:
+  title: Supra RPC Node View API
+  description: '0.5.0
+
+    tag:supra_rpc_v11.5.2
+
+    commit_hash:5e9ea652
+
+    build_time:2026-08-25 08:38:29 +00:00
+
+    build_env:rustc 1.97.1 (8bab26f4f 2026-07-14),1.97.1-x86_64-unknown-linux-gnu'
+  contact:
+    name: Supra Labs
+    url: https://supra.com
+  version: 5e9ea652457cd48aba6b1505bdd59da27fec13f6
+servers:
+- url: /
+tags:
+- name: View
+  description: View Api
+paths:
+  /rpc/v2/view:
+    post:
+      tags:
+      - View
+      summary: Execute view function (v2)
+      description: '# Example
+
+        ```json
+
+        {
+
+        "function": "0x1::timestamp::now_microseconds",
+
+        "type_arguments": [],
+
+        "arguments": []
+
+        }
+
+        ```'
+      operationId: view_function_v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ViewRequest'
+        required: true
+      responses:
+        '200':
+          description: Result of view function
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveValueResponseV2'
+      deprecated: true
+  /rpc/v3/view:
+    post:
+      tags:
+      - View
+      summary: Execute view function (v3)
+      description: '# Example
+
+        ```json
+
+        {
+
+        "function": "0x1::timestamp::now_microseconds",
+
+        "type_arguments": [],
+
+        "arguments": []
+
+        }
+
+        ```'
+      operationId: view_function_v3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ViewRequest'
+          application/x.supra.view_function+bcs:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: u-int8
+                minimum: 0
+        required: true
+      responses:
+        '200':
+          description: Result of view function
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveValueResponseV2'
+components:
+  schemas:
+    MoveValue:
+      oneOf:
+      - type: object
+        description: A u8 Move type
+        required:
+        - U8
+        properties:
+          U8:
+            type: integer
+            format: u-int8
+            description: A u8 Move type
+            minimum: 0
+      - type: object
+        required:
+        - U16
+        properties:
+          U16:
+            type: integer
+            format: u-int16
+            minimum: 0
+      - type: object
+        required:
+        - U32
+        properties:
+          U32:
+            type: integer
+            format: u-int32
+            minimum: 0
+      - type: object
+        description: A string encoded U64.
+        required:
+        - U64
+        properties:
+          U64:
+            type: string
+            description: A string encoded U64.
+      - type: object
+        description: A string encoded U128.
+        required:
+        - U128
+        properties:
+          U128:
+            type: string
+            description: A string encoded U128.
+      - type: object
+        description: A string encoded U256.
+        required:
+        - U256
+        properties:
+          U256:
+            type: string
+            description: A string encoded U256.
+      - type: object
+        description: A bool Move type
+        required:
+        - Bool
+        properties:
+          Bool:
+            type: boolean
+            description: A bool Move type
+      - type: object
+        description: 'The address of an account
+
+
+          This is represented in a string as a 64 character hex string, sometimes
+
+          shortened by stripping leading 0s, and adding a 0x.'
+        required:
+        - Address
+        properties:
+          Address:
+            type: string
+            description: 'The address of an account
+
+
+              This is represented in a string as a 64 character hex string, sometimes
+
+              shortened by stripping leading 0s, and adding a 0x.'
+      - type: object
+        description: A vector Move type.  May have any other [`MoveValue`] nested inside it
+        required:
+        - Vector
+        properties:
+          Vector:
+            type: array
+            items:
+              type: string
+            description: A vector Move type.  May have any other [`MoveValue`] nested inside it
+      - type: object
+        description: 'All bytes (Vec<u8>) data is represented as hex-encoded string prefixed with `0x` and fulfilled with
+
+          two hex digits per byte.
+
+
+          Unlike the `Address` type, HexEncodedBytes will not trim any zeros.'
+        required:
+        - Bytes
+        properties:
+          Bytes:
+            type: string
+            description: 'All bytes (Vec<u8>) data is represented as hex-encoded string prefixed with `0x` and fulfilled with
+
+              two hex digits per byte.
+
+
+              Unlike the `Address` type, HexEncodedBytes will not trim any zeros.'
+      - type: object
+        description: "This is a JSON representation of some data within an account resource. More specifically,\nit is a map of strings to arbitrary JSON values / objects, where the keys are top level\nfields within the given resource.\n\nTo clarify, you might query for 0x1::account::Account and see the example data.\n\nMove `bool` type value is serialized into `boolean`.\n\nMove `u8`, `u16` and `u32` type value is serialized into `integer`.\n\nMove `u64`, `u128` and `u256` type value is serialized into `string`.\n\nMove `address` type value (32 byte Supra account address) is serialized into a HexEncodedBytes string.\nFor example:\n  - `0x1`\n  - `0x1668f6be25668c1a17cd8caf6b8d2f25`\n\nMove `vector` type value is serialized into `array`, except `vector<u8>` which is serialized into a\nHexEncodedBytes string with `0x` prefix.\nFor example:\n  - `vector<u64>{255, 255}` => `[\\\"255\\\", \\\"255\\\"]`\n  - `vector<u8>{255, 255}` => `0xffff`\n\nMove `struct` type value is serialized into `object` that looks like this (except some Move stdlib types, see the following section):\n  ```json\n  {\n    field1_name: field1_value,\n    field2_name: field2_value,\n    ......\n  }\n  ```\n\nFor example:\n  `{ \\\"created\\\": \\\"0xa550c18\\\", \\\"role_id\\\": \\\"0\\\" }`\n\n**Special serialization for Move stdlib types**:\n  - [0x1::string::String]\n    is serialized into `string`. For example, struct value `0x1::string::String{bytes: b\\\"Hello World!\\\"}`\n    is serialized as `\\\"Hello World!\\\"` in JSON.\n"
+        required:
+        - Struct
+        properties:
+          Struct:
+            type: object
+            description: "This is a JSON representation of some data within an account resource. More specifically,\nit is a map of strings to arbitrary JSON values / objects, where the keys are top level\nfields within the given resource.\n\nTo clarify, you might query for 0x1::account::Account and see the example data.\n\nMove `bool` type value is serialized into `boolean`.\n\nMove `u8`, `u16` and `u32` type value is serialized into `integer`.\n\nMove `u64`, `u128` and `u256` type value is serialized into `string`.\n\nMove `address` type value (32 byte Supra account address) is serialized into a HexEncodedBytes string.\nFor example:\n  - `0x1`\n  - `0x1668f6be25668c1a17cd8caf6b8d2f25`\n\nMove `vector` type value is serialized into `array`, except `vector<u8>` which is serialized into a\nHexEncodedBytes string with `0x` prefix.\nFor example:\n  - `vector<u64>{255, 255}` => `[\\\"255\\\", \\\"255\\\"]`\n  - `vector<u8>{255, 255}` => `0xffff`\n\nMove `struct` type value is serialized into `object` that looks like this (except some Move stdlib types, see the following section):\n  ```json\n  {\n    field1_name: field1_value,\n    field2_name: field2_value,\n    ......\n  }\n  ```\n\nFor example:\n  `{ \\\"created\\\": \\\"0xa550c18\\\", \\\"role_id\\\": \\\"0\\\" }`\n\n**Special serialization for Move stdlib types**:\n  - [0x1::string::String]\n    is serialized into `string`. For example, struct value `0x1::string::String{bytes: b\\\"Hello World!\\\"}`\n    is serialized as `\\\"Hello World!\\\"` in JSON.\n"
+      - type: object
+        description: A string Move type
+        required:
+        - String
+        properties:
+          String:
+            type: string
+            description: A string Move type
+      description: An enum of the possible Move value types.
+    ViewRequest:
+      type: object
+      description: View request for the Move View Function API.
+      required:
+      - function
+      - type_arguments
+      - arguments
+      properties:
+        function:
+          type: object
+        type_arguments:
+          type: object
+          description: Type arguments of the function
+        arguments:
+          type: object
+          description: Arguments of the function
+    MoveValueResponseV2:
+      type: object
+      description: Datatype for representing the MoveValue
+      required:
+      - result
+      properties:
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/MoveValue'

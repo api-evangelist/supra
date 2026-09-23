@@ -1,0 +1,527 @@
+openapi: 3.2.0
+info:
+  title: Supra RPC Node Faucet API
+  description: '0.5.0
+
+    tag:supra_rpc_v11.5.2
+
+    commit_hash:5e9ea652
+
+    build_time:2026-08-25 08:38:29 +00:00
+
+    build_env:rustc 1.97.1 (8bab26f4f 2026-07-14),1.97.1-x86_64-unknown-linux-gnu'
+  contact:
+    name: Supra Labs
+    url: https://supra.com
+  version: 5e9ea652457cd48aba6b1505bdd59da27fec13f6
+servers:
+- url: /
+tags:
+- name: Faucet
+  description: Faucet Api
+paths:
+  /rpc/v1/wallet/faucet/transactions/{hash}:
+    get:
+      tags:
+      - Faucet
+      summary: Faucet transaction (v1)
+      description: Get information about a faucet transaction by its hash.
+      operationId: faucet_transaction_by_hash_v1
+      parameters:
+      - name: hash
+        in: path
+        description: Hash of the faucet transaction to lookup
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Faucet transaction data of the given transaction hash
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: 'null'
+                - $ref: '#/components/schemas/TransactionInfoV1'
+      deprecated: true
+  /rpc/v1/wallet/faucet/{address}:
+    get:
+      tags:
+      - Faucet
+      summary: Faucet (v1)
+      description: funds account with [FUND_AMOUNT] coins
+      operationId: faucet_v1
+      parameters:
+      - name: address
+        in: path
+        description: Address of account with or without a 0x prefix
+        required: true
+        schema:
+          type: string
+        example: '0x88fbd33f54e1126269769780feb24480428179f552e2313fbe571b72e62a1ca1'
+      responses:
+        '200':
+          description: list of associated transactions created
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaucetStatus'
+  /rpc/v2/wallet/faucet/transactions/{hash}:
+    get:
+      tags:
+      - Faucet
+      summary: Faucet transaction (v2)
+      description: Get information about a faucet transaction by its hash.
+      operationId: faucet_v2
+      parameters:
+      - name: hash
+        in: path
+        description: Hash of the faucet transaction to lookup
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Faucet transaction data of the given transaction hash
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionInfoV2'
+components:
+  schemas:
+    EventV1:
+      type: object
+      description: On-chain event.
+      required:
+      - guid
+      - sequence_number
+      - type
+      - data
+      properties:
+        guid:
+          $ref: '#/components/schemas/Guid'
+          description: The globally unique identifier of this event stream.
+        sequence_number:
+          type: string
+        type:
+          type: string
+          description: The `MoveType` of the event
+        data:
+          description: The JSON representation of the event
+    TxExecutionStatus:
+      type: string
+      enum:
+      - Success
+      - Fail
+      - Invalid
+      - PendingAfterExecution
+      - Pending
+    EvmTransferKind:
+      type: string
+      enum:
+      - call
+      - create
+      - create2
+      - selfdestruct
+    Hash:
+      type: string
+      description: Hex encoded hash
+    TransactionOutputV1:
+      oneOf:
+      - type: object
+        required:
+        - Dkg
+        properties:
+          Dkg:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: string
+        enum:
+        - Empty
+      - type: object
+        required:
+        - Move
+        properties:
+          Move:
+            $ref: '#/components/schemas/MoveTransactionOutputV1'
+      - type: object
+        required:
+        - Oracle
+        properties:
+          Oracle:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: object
+        required:
+        - Evm
+        properties:
+          Evm:
+            $ref: '#/components/schemas/EvmTransactionOutput'
+      description: '[crate::v1::TransactionOutputV1] with all fields in human-readable format.'
+    EvmTransferOperation:
+      type: object
+      description: This is a convenience structure wrapping [`TransferOperation`] to implement (de)serialization logic.
+      required:
+      - kind
+      - from
+      - to
+      - value
+      properties:
+        kind:
+          $ref: '#/components/schemas/EvmTransferKind'
+          description: Source of the transfer call.
+        from:
+          type: string
+          description: Sender of the transfer.
+        to:
+          type: string
+          description: Receiver of the transfer.
+        value:
+          type: string
+          description: Value of the transfer.
+    MoveTransactionOutputV1:
+      type: object
+      description: The execution output of a Move transaction.
+      required:
+      - gas_used
+      - events
+      - vm_status
+      properties:
+        gas_used:
+          type: integer
+          format: u-int64
+          description: The gas used by the transaction.
+          minimum: 0
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventV1'
+        vm_status:
+          type: string
+          description: A message summarizing the execution result produced by the MoveVM.
+    TransactionInfoV1:
+      type: object
+      description: Information about a Supra transaction.
+      required:
+      - authenticator
+      - hash
+      - header
+      - payload
+      - status
+      properties:
+        authenticator:
+          type: object
+          description: The cryptographic material that was submitted with the transaction, according to its type.
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/TransactionBlockInfo'
+            description: 'Metadata about the block containing the transaction, if any. This field should
+
+              not be set if this [TransactionInfoV1] is yet to be included in a [Block].'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        header:
+          $ref: '#/components/schemas/SmrTransactionHeader'
+        payload:
+          type: object
+          description: The deserialized payload of the transaction according to its type.
+        output:
+          oneOf:
+          - $ref: '#/components/schemas/TransactionOutputV1'
+          - type: 'null'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
+    EpochId:
+      type: object
+      required:
+      - chain_id
+      - epoch
+      properties:
+        chain_id:
+          oneOf:
+          - type: integer
+            format: u-int8
+            minimum: 0
+          description: Unique identifier for this instance of the SMR.
+        epoch:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the epoch within the context of `chain_id`.
+    Guid:
+      type: object
+      description: A globally unique identifier derived from the sender's address and a counter
+      required:
+      - creation_number
+      - account_address
+      properties:
+        creation_number:
+          type: string
+          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
+        account_address:
+          $ref: '#/components/schemas/AccountAddress'
+          description: Address that created the GUID
+    BlockHeaderInfo:
+      type: object
+      description: Metadata about a Supra block.
+      required:
+      - author
+      - hash
+      - height
+      - parent
+      - timestamp
+      - view
+      properties:
+        author:
+          $ref: '#/components/schemas/Identity'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        height:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Number of blocks before this block in the chain (including the genesis block).
+        parent:
+          $ref: '#/components/schemas/Hash'
+        timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+        view:
+          $ref: '#/components/schemas/View'
+    SmrTimestamp:
+      type: object
+      required:
+      - timestamp
+      properties:
+        timestamp:
+          type: integer
+          format: u-int64
+          description: The timestamp as measured in the number of microseconds since the unix epoch.
+          minimum: 0
+    AccountAddress:
+      type: string
+      description: Hex encoded account address.
+    FaucetStatus:
+      oneOf:
+      - type: object
+        required:
+        - Accepted
+        properties:
+          Accepted:
+            $ref: '#/components/schemas/Hash'
+      - type: string
+        enum:
+        - TryLater
+    TransactionBlockInfo:
+      type: object
+      description: Metadata about the block that finalized a particular [SmrTransaction].
+      required:
+      - hash
+      - height
+      - timestamp
+      properties:
+        hash:
+          $ref: '#/components/schemas/Hash'
+        height:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: The height of the related block.
+        timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+      deprecated: true
+    TransactionInfoV2:
+      type: object
+      description: Information about a Supra transaction.
+      required:
+      - authenticator
+      - hash
+      - header
+      - payload
+      - status
+      properties:
+        authenticator:
+          type: object
+          description: The cryptographic material that was submitted with the transaction, according to its type.
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/BlockHeaderInfo'
+            description: 'Metadata about the block containing the transaction, if any. This field should
+
+              not be set if this [TransactionInfoV2] is yet to be included in a [Block].'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        header:
+          $ref: '#/components/schemas/SmrTransactionHeader'
+        payload:
+          type: object
+          description: The deserialized payload of the transaction according to its type.
+        output:
+          oneOf:
+          - $ref: '#/components/schemas/TransactionOutputV1'
+          - type: 'null'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
+    EvmTransactionOutput:
+      oneOf:
+      - type: object
+        description: Returned successfully
+        required:
+        - Success
+        properties:
+          Success:
+            type: object
+            description: Returned successfully
+            required:
+            - reason
+            - gas_used
+            - gas_refunded
+            - logs
+            - output
+            properties:
+              reason: {}
+              gas_used:
+                type: integer
+                format: u-int64
+                minimum: 0
+              gas_refunded:
+                type: integer
+                format: u-int64
+                minimum: 0
+              logs: {}
+              output: {}
+              transfers:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EvmTransferOperation'
+                description: A list of transfer operations during the transaction execution.
+      - type: object
+        description: Reverted by `REVERT` opcode that doesn't spend all gas.
+        required:
+        - Revert
+        properties:
+          Revert:
+            type: object
+            description: Reverted by `REVERT` opcode that doesn't spend all gas.
+            required:
+            - gas_used
+            - output
+            properties:
+              gas_used:
+                type: integer
+                format: u-int64
+                minimum: 0
+              output:
+                type: string
+      - type: object
+        description: Reverted for various reasons and spend all gas.
+        required:
+        - Halt
+        properties:
+          Halt:
+            type: object
+            description: Reverted for various reasons and spend all gas.
+            required:
+            - reason
+            - gas_used
+            properties:
+              reason: {}
+              gas_used:
+                type: integer
+                format: u-int64
+                description: Halting will spend all the gas, and will be equal to gas_limit.
+                minimum: 0
+      - type: object
+        description: Error occurred during execution.
+        required:
+        - Error
+        properties:
+          Error:
+            type: object
+            description: Error occurred during execution.
+            required:
+            - message
+            properties:
+              message:
+                type: string
+      description: API representation of the execution output of an Evm transaction.
+    Identity:
+      type: string
+      description: Hex encoded identity.
+    View:
+      type: object
+      required:
+      - epoch_id
+      - round
+      properties:
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: Identifier of the consensus epoch.
+        round:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the consensus round.
+    SmrTransactionHeader:
+      type: object
+      required:
+      - chain_id
+      - expiration_timestamp
+      - sender
+      - sequence_number
+      - gas_unit_price
+      - max_gas_amount
+      properties:
+        chain_id:
+          type: integer
+          format: u-int64
+          description: 'The unique identifier for the instance of the Supra chain that this transaction should
+
+            be executed upon.'
+          minimum: 0
+        expiration_timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+          description: The time at which this transaction should be discarded if it has not been executed.
+        sender:
+          $ref: '#/components/schemas/AccountAddress'
+          description: The standardized representation of the sender's account address in the target VM.
+        sequence_number:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: The sequence number of the sender's account in the target VM.
+        gas_unit_price:
+          type: integer
+          description: The amount of Supra that the sender is willing to pay per unit of gas.
+          minimum: 0
+        max_gas_amount:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: The maximum amount of gas that the sender is willing to spend.

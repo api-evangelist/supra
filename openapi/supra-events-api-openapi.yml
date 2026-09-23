@@ -1,0 +1,617 @@
+openapi: 3.2.0
+info:
+  title: Supra RPC Node Events API
+  description: '0.5.0
+
+    tag:supra_rpc_v11.5.2
+
+    commit_hash:5e9ea652
+
+    build_time:2026-08-25 08:38:29 +00:00
+
+    build_env:rustc 1.97.1 (8bab26f4f 2026-07-14),1.97.1-x86_64-unknown-linux-gnu'
+  contact:
+    name: Supra Labs
+    url: https://supra.com
+  version: 5e9ea652457cd48aba6b1505bdd59da27fec13f6
+servers:
+- url: /
+tags:
+- name: Events
+  description: Events Api
+paths:
+  /rpc/v3/events/{event_type}:
+    get:
+      tags:
+      - Events
+      summary: Get events by type (v3)
+      description: Get events by type.
+      operationId: events_by_type_v3
+      parameters:
+      - name: start_height
+        in: query
+        description: Starting block height (inclusive). Optional.
+        required: false
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+        style: form
+      - name: end_height
+        in: query
+        description: Ending block height (exclusive). Optional.
+        required: false
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+        style: form
+      - name: limit
+        in: query
+        description: Maximum number of events to return. Defaults to 20, max 100.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        style: form
+      - name: start
+        in: query
+        description: 'The cursor to start the query from. Optional.
+
+
+          During a paginated query, the cursor returned in the `X_SUPRA_CURSOR` response header
+
+          should be specified as the `start` parameter of the request for the next page.'
+        required: false
+        schema:
+          type: string
+        style: form
+      - name: event_type
+        in: path
+        description: 'The fully qualified name of the event struct, i.e.: `contract_address::module_name::event_struct_name`. E.g. `0x1::coin::CoinDeposit`'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of Events contained in blocks
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+            x-supra-cursor:
+              schema:
+                type: string
+              description: Cursor specifying where to start for pagination. This cursor cannot be derived manually client-side. Instead, you must call this endpoint once without this query parameter specified, and then use the cursor returned in the x-supra-cursor header in the response.
+            x-supra-oldest-block:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Height of the oldest available block. Absent until the archive has indexed at least one block.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsV3'
+        '410':
+          description: All data in the requested range has been pruned and is no longer available.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+            x-supra-oldest-block:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Height of the oldest available block.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+        '503':
+          description: The archive is still initializing. No executed blocks are available yet. Please retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+  /rpc/v4/events/{event_hash}/transaction/{transaction_hash}:
+    get:
+      tags:
+      - Events
+      summary: Get event emission proof (v4)
+      description: 'This endpoint provides an event emission proof for the given event hash within the specified
+
+        transaction. The returned proof verifies that the given event was emitted as part of that given
+
+        transaction.'
+      operationId: event_emission_proof_v4
+      parameters:
+      - name: event_hash
+        in: path
+        required: false
+        schema:
+          $ref: '#/components/schemas/Hash'
+      - name: transaction_hash
+        in: path
+        required: false
+        schema:
+          $ref: '#/components/schemas/Hash'
+      responses:
+        '200':
+          description: Emission proof data of the given event.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventEmissionProof'
+        '400':
+          description: Malformed event or transaction hash provided.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+        '404':
+          description: The specified transaction hash does not exist.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+  /rpc/v4/events/{event_type}:
+    get:
+      tags:
+      - Events
+      summary: Get events by type (v4)
+      description: 'If `include_proof` is set to `true`, this returns the event emission proof for each event,
+
+        along with the corresponding transaction inclusion proof in which the event was emitted.
+
+
+        The following code demonstrates event and transaction Merkle proof verification in a Solidity
+
+        smart contract:
+
+
+        ```solidity
+
+        // SPDX-License-Identifier: MIT
+
+        pragma solidity ^0.8.26;
+
+
+        contract MerkleProof {
+
+        bytes public TRANSACTION_MERKEL_PREFIXED_HASH_SALT =
+
+        bytes("SUPRA::TransactionAccumulator");
+
+        bytes public EVENT_MERKEL_PREFIXED_HASH_SALT =
+
+        bytes("SUPRA::EventAccumulator");
+
+        bytes32 public immutable TRANSACTION_MERKEL_PREFIXED_HASH =
+
+        keccak256(TRANSACTION_MERKEL_PREFIXED_HASH_SALT);
+
+        bytes32 public immutable EVENT_MERKEL_PREFIXED_HASH =
+
+        keccak256(EVENT_MERKEL_PREFIXED_HASH_SALT);
+
+
+        function verify(
+
+        bytes32[] memory proof,
+
+        bytes32 root,
+
+        bytes32 leaf,
+
+        uint256 index,
+
+        bool isTransactionMerkel
+
+        ) public view returns (bool) {
+
+        bytes32 hash = leaf;
+
+        bytes32 PREFIXED_HASH;
+
+        if (isTransactionMerkel) {
+
+        PREFIXED_HASH = TRANSACTION_MERKEL_PREFIXED_HASH;
+
+        } else {
+
+        PREFIXED_HASH = EVENT_MERKEL_PREFIXED_HASH;
+
+        }
+
+
+        for (uint256 i = 0; i < proof.length; i++) {
+
+        bytes32 proofElement = proof[i];
+
+        if (index % 2 == 0) {
+
+        hash = keccak256(
+
+        bytes.concat(PREFIXED_HASH, hash, proofElement)
+
+        );
+
+        } else {
+
+        hash = keccak256(
+
+        bytes.concat(PREFIXED_HASH, proofElement, hash)
+
+        );
+
+        }
+
+        index = index / 2;
+
+        }
+
+        return hash == root;
+
+        }
+
+        }
+
+        ```'
+      operationId: events_by_type_v4
+      parameters:
+      - name: start_height
+        in: query
+        description: Starting block height (inclusive). Optional.
+        required: false
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+      - name: end_height
+        in: query
+        description: Ending block height (exclusive). Optional.
+        required: false
+        schema:
+          type: integer
+          format: u-int64
+          minimum: 0
+      - name: limit
+        in: query
+        description: Maximum number of events to return. Defaults to 20, max 100.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+      - name: start
+        in: query
+        description: 'The cursor to start the query from. Optional.
+
+
+          During a paginated query, the cursor returned in the `X_SUPRA_CURSOR` response header
+
+          should be specified as the `start` parameter of the request for the next page.'
+        required: false
+        schema:
+          type: string
+      - name: include_proof
+        in: query
+        description: 'If set to `true`, includes the Merkle proofs for the related transaction''s inclusion in the
+
+          executed transaction log and the event''s inclusion in the output of that transaction,
+
+          in the response.'
+        required: false
+        schema:
+          type: boolean
+      - name: event_type
+        in: path
+        description: 'The fully qualified name of the event struct, i.e.: `contract_address::module_name::event_struct_name`. E.g. `0x1::coin::CoinDeposit`'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of Events contained in blocks
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+            x-supra-cursor:
+              schema:
+                type: string
+              description: Cursor specifying where to start for pagination. This cursor cannot be derived manually client-side. Instead, you must call this endpoint once without this query parameter specified, and then use the cursor returned in the x-supra-cursor header in the response.
+            x-supra-oldest-block:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Height of the oldest available block. Absent until the archive has indexed at least one block.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsV4'
+        '410':
+          description: All data in the requested range has been pruned and is no longer available.
+          headers:
+            x-supra-chain-id:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Chain ID of the current chain.
+            x-supra-oldest-block:
+              schema:
+                type: integer
+                format: u-int8
+                minimum: 0
+              description: Height of the oldest available block.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+        '503':
+          description: The archive is still initializing. No executed blocks are available yet. Please retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResp'
+components:
+  schemas:
+    EventWithContextV4:
+      type: object
+      description: Event wrapper with block height and transaction hash
+      required:
+      - event
+      - block_height
+      - transaction_hash
+      properties:
+        event:
+          $ref: '#/components/schemas/EventV2'
+        block_height:
+          type: integer
+          format: u-int64
+          description: The height of the block where the event was emitted
+          minimum: 0
+        transaction_hash:
+          $ref: '#/components/schemas/Hash'
+        proofs:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/TransactionInclusionAndEventEmissionProof'
+            description: 'Proofs required to verify that an event was emitted in a transaction that was finalized in
+
+              the network.'
+    EventV1:
+      type: object
+      description: On-chain event.
+      required:
+      - guid
+      - sequence_number
+      - type
+      - data
+      properties:
+        guid:
+          $ref: '#/components/schemas/Guid'
+          description: The globally unique identifier of this event stream.
+        sequence_number:
+          type: string
+        type:
+          type: string
+          description: The `MoveType` of the event
+        data:
+          description: The JSON representation of the event
+    Hash:
+      type: string
+      description: Hex encoded hash
+    EventWithContextV3:
+      type: object
+      description: Event wrapper with block height and transaction hash
+      required:
+      - event
+      - block_height
+      - transaction_hash
+      properties:
+        event:
+          $ref: '#/components/schemas/EventV1'
+        block_height:
+          type: integer
+          format: u-int64
+          description: The height of the block where the event was emitted
+          minimum: 0
+        transaction_hash:
+          $ref: '#/components/schemas/Hash'
+    TransactionInclusionProof:
+      type: object
+      description: Proof of a transaction's inclusion in the merkle accumulator tree.
+      required:
+      - proof
+      - leaf_hash_value
+      - merkle_root_hash_value
+      - leaf_index
+      - certified_at_height
+      properties:
+        proof:
+          $ref: '#/components/schemas/AccumulatorProof'
+          description: The accumulator proof for the transaction.
+        leaf_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded hash value of the leaf node.
+        merkle_root_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded merkle root hash value.
+        leaf_index:
+          type: integer
+          format: u-int64
+          description: The leaf index in the accumulator tree.
+          minimum: 0
+        events_tree_merkle_root_hash_value:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/Hash'
+            description: Hex encoded merkle root hash value of the events tree, if available.
+        events_leaves_hash_values:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/Hash'
+          description: Hex encoded hash values of the events tree leaves, if available.
+        certified_at_height:
+          $ref: '#/components/schemas/u64'
+          description: Block height at which the Merkle root was certified.
+    EventsV3:
+      type: object
+      description: Events structure for v3 API
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/EventWithContextV3'
+    EventV2:
+      type: object
+      description: On-chain event v2.
+      required:
+      - guid
+      - sequence_number
+      - type
+      - data
+      - hash
+      properties:
+        guid:
+          $ref: '#/components/schemas/Guid'
+          description: The globally unique identifier of this event stream.
+        sequence_number:
+          type: string
+        type:
+          type: string
+          description: The `MoveType` of the event
+        data:
+          description: The JSON representation of the event
+        hash:
+          type: string
+          description: The hash of the event, derived from `RLP(event)` + `keccak256`.
+    Guid:
+      type: object
+      description: A globally unique identifier derived from the sender's address and a counter
+      required:
+      - creation_number
+      - account_address
+      properties:
+        creation_number:
+          type: string
+          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
+        account_address:
+          $ref: '#/components/schemas/AccountAddress'
+          description: Address that created the GUID
+    u64:
+      type: integer
+      format: u-int64
+      minimum: 0
+    ErrResp:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+    EventsV4:
+      type: object
+      description: Events structure for v4 API
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/EventWithContextV4'
+    AccountAddress:
+      type: string
+      description: Hex encoded account address.
+    EventEmissionProof:
+      type: object
+      description: Proof of an event's emission within a transaction's events tree.
+      required:
+      - proof
+      - merkle_root_hash_value
+      - leaf_hash_value
+      - leaf_index
+      properties:
+        proof:
+          $ref: '#/components/schemas/AccumulatorProof'
+          description: The accumulator proof for the event.
+        merkle_root_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded merkle root hash value.
+        leaf_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded hash value of the leaf node.
+        leaf_index:
+          type: integer
+          format: u-int64
+          description: The leaf index in the events accumulator tree.
+          minimum: 0
+    TransactionInclusionAndEventEmissionProof:
+      type: object
+      description: 'Container for an event emission proof along with its corresponding transaction inclusion proof.
+
+
+        This structure bundles the proofs required to verify that a specific event was emitted in the
+
+        Supra network as part of a transaction that was successfully included in a block and finalized
+
+        in the network.'
+      required:
+      - transaction_inclusion_proof
+      - event_emission_proof
+      properties:
+        transaction_inclusion_proof:
+          $ref: '#/components/schemas/TransactionInclusionProof'
+        event_emission_proof:
+          $ref: '#/components/schemas/EventEmissionProof'
+    AccumulatorProof:
+      type: object
+      description: 'A proof that can be used authenticate an element in an accumulator given trusted root hash. For
+
+        example, both `TransactionInclusionProof` and `EventEmissionProof` can be constructed on top of
+
+        this structure.'
+      required:
+      - siblings
+      properties:
+        siblings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Hash'
+          description: 'All siblings in this proof, including the default ones. Siblings are ordered from the bottom
+
+            level to the root level.'

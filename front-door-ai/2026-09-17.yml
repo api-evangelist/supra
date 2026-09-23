@@ -1,0 +1,29 @@
+# Front Door AI Index — supra — 2026-09-17
+# AI vocabulary counted on the provider's root page. Generated; do not edit.
+# `score` is null unless ownership is `own` — see front_door_ai.py.
+front_door_ai:
+  slug: supra
+  lexicon_version: '1.0'
+  probed_at: '2026-09-17'
+  host: supra.com
+  final_host: supra.com
+  ownership: own
+  owner: supra
+  shares_host_with: null
+  inherited_from: null
+  verdict: scored
+  score: 7
+  host_score: 7
+  density: 9.54
+  words: 734
+  tiers:
+    agentic: 1
+    core: 6
+    model: 0
+  ambiguous: 12
+  top_terms:
+    AI: 6
+    smart: 6
+    automation: 5
+    AI agent: 1
+    agent: 1

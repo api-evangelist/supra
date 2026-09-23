@@ -1,0 +1,47 @@
+{
+  "provider": "supra",
+  "sources": [
+    "_original/supra-rpc-node-openapi-original.json"
+  ],
+  "outputs": [
+    "supra-accounts-api-openapi.yml",
+    "supra-block-api-openapi.yml",
+    "supra-consensus-api-openapi.yml",
+    "supra-events-api-openapi.yml",
+    "supra-faucet-api-openapi.yml",
+    "supra-proofs-api-openapi.yml",
+    "supra-tables-api-openapi.yml",
+    "supra-transactions-api-openapi.yml",
+    "supra-version-api-openapi.yml",
+    "supra-view-api-openapi.yml",
+    "supra-websocket-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [
+    "supra-rpc-node-openapi-original.json: dangling $ref: #/components/schemas/AutomationRecordInfoV3",
+    "supra-rpc-node-openapi-original.json: dangling $ref: #/components/schemas/AutomationRecordInfoV4"
+  ],
+  "warnings": [],
+  "notes": [
+    "1 archived document(s) dropped as subsets of other archived documents",
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "supra-rpc-node-openapi-original.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
+    "supra-rpc-node-openapi-original.json: declared missing tag: Consensus",
+    "supra-rpc-node-openapi-original.json: declared missing tag: Version",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "_original/supra-rpc-node-openapi.yml: archived document superseded by a larger archived document",
+    "supra-accounts-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "supra-block-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "supra-consensus-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "supra-events-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "supra-faucet-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "supra-proofs-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "supra-tables-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "supra-transactions-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "supra-version-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "supra-view-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "supra-websocket-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
+}
