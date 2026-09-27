@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  title: Supra RPC Node Web Socket API
+  title: Supra RPC Node WebSocket API
   description: '0.5.0
 
     tag:supra_rpc_v11.5.2
