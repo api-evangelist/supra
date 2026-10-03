@@ -122,22 +122,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MoveValue'
-    ViewRequest:
-      type: object
-      description: View request for the Move View Function API.
-      required:
-      - function
-      - type_arguments
-      - arguments
-      properties:
-        function:
-          type: object
-        type_arguments:
-          type: object
-          description: Type arguments of the function
-        arguments:
-          type: object
-          description: Arguments of the function
     MoveValue:
       oneOf:
       - type: object
@@ -261,3 +245,19 @@ components:
             type: string
             description: A string Move type
       description: An enum of the possible Move value types.
+    ViewRequest:
+      type: object
+      description: View request for the Move View Function API.
+      required:
+      - function
+      - type_arguments
+      - arguments
+      properties:
+        function:
+          type: object
+        type_arguments:
+          type: object
+          description: Type arguments of the function
+        arguments:
+          type: object
+          description: Arguments of the function
