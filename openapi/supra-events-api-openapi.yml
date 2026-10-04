@@ -389,6 +389,34 @@ paths:
                 $ref: '#/components/schemas/ErrResp'
 components:
   schemas:
+    AccumulatorProof:
+      type: object
+      description: 'A proof that can be used authenticate an element in an accumulator given trusted root hash. For
+
+        example, both `TransactionInclusionProof` and `EventEmissionProof` can be constructed on top of
+
+        this structure.'
+      required:
+      - siblings
+      properties:
+        siblings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Hash'
+          description: 'All siblings in this proof, including the default ones. Siblings are ordered from the bottom
+
+            level to the root level.'
+    ErrResp:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+    u64:
+      type: integer
+      format: u-int64
+      minimum: 0
     EventV1:
       type: object
       description: On-chain event.
@@ -408,10 +436,27 @@ components:
           description: The `MoveType` of the event
         data:
           description: The JSON representation of the event
-    u64:
-      type: integer
-      format: u-int64
-      minimum: 0
+    Guid:
+      type: object
+      description: A globally unique identifier derived from the sender's address and a counter
+      required:
+      - creation_number
+      - account_address
+      properties:
+        creation_number:
+          type: string
+          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
+        account_address:
+          $ref: '#/components/schemas/AccountAddress'
+          description: Address that created the GUID
+    EventsV3:
+      type: object
+      description: Events structure for v3 API
+      required:
+      - data
+      properties:
+        data:
+          $ref: '#/components/schemas/EventWithContextV3'
     EventV2:
       type: object
       description: On-chain event v2.
@@ -435,6 +480,94 @@ components:
         hash:
           type: string
           description: The hash of the event, derived from `RLP(event)` + `keccak256`.
+    EventEmissionProof:
+      type: object
+      description: Proof of an event's emission within a transaction's events tree.
+      required:
+      - proof
+      - merkle_root_hash_value
+      - leaf_hash_value
+      - leaf_index
+      properties:
+        proof:
+          $ref: '#/components/schemas/AccumulatorProof'
+          description: The accumulator proof for the event.
+        merkle_root_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded merkle root hash value.
+        leaf_hash_value:
+          $ref: '#/components/schemas/Hash'
+          description: Hex encoded hash value of the leaf node.
+        leaf_index:
+          type: integer
+          format: u-int64
+          description: The leaf index in the events accumulator tree.
+          minimum: 0
+    EventWithContextV4:
+      type: object
+      description: Event wrapper with block height and transaction hash
+      required:
+      - event
+      - block_height
+      - transaction_hash
+      properties:
+        event:
+          $ref: '#/components/schemas/EventV2'
+        block_height:
+          type: integer
+          format: u-int64
+          description: The height of the block where the event was emitted
+          minimum: 0
+        transaction_hash:
+          $ref: '#/components/schemas/Hash'
+        proofs:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/TransactionInclusionAndEventEmissionProof'
+            description: 'Proofs required to verify that an event was emitted in a transaction that was finalized in
+
+              the network.'
+    TransactionInclusionAndEventEmissionProof:
+      type: object
+      description: 'Container for an event emission proof along with its corresponding transaction inclusion proof.
+
+
+        This structure bundles the proofs required to verify that a specific event was emitted in the
+
+        Supra network as part of a transaction that was successfully included in a block and finalized
+
+        in the network.'
+      required:
+      - transaction_inclusion_proof
+      - event_emission_proof
+      properties:
+        transaction_inclusion_proof:
+          $ref: '#/components/schemas/TransactionInclusionProof'
+        event_emission_proof:
+          $ref: '#/components/schemas/EventEmissionProof'
+    Hash:
+      type: string
+      description: Hex encoded hash
+    EventWithContextV3:
+      type: object
+      description: Event wrapper with block height and transaction hash
+      required:
+      - event
+      - block_height
+      - transaction_hash
+      properties:
+        event:
+          $ref: '#/components/schemas/EventV1'
+        block_height:
+          type: integer
+          format: u-int64
+          description: The height of the block where the event was emitted
+          minimum: 0
+        transaction_hash:
+          $ref: '#/components/schemas/Hash'
+    AccountAddress:
+      type: string
+      description: Hex encoded account address.
     TransactionInclusionProof:
       type: object
       description: Proof of a transaction's inclusion in the merkle accumulator tree.
@@ -474,67 +607,6 @@ components:
         certified_at_height:
           $ref: '#/components/schemas/u64'
           description: Block height at which the Merkle root was certified.
-    EventEmissionProof:
-      type: object
-      description: Proof of an event's emission within a transaction's events tree.
-      required:
-      - proof
-      - merkle_root_hash_value
-      - leaf_hash_value
-      - leaf_index
-      properties:
-        proof:
-          $ref: '#/components/schemas/AccumulatorProof'
-          description: The accumulator proof for the event.
-        merkle_root_hash_value:
-          $ref: '#/components/schemas/Hash'
-          description: Hex encoded merkle root hash value.
-        leaf_hash_value:
-          $ref: '#/components/schemas/Hash'
-          description: Hex encoded hash value of the leaf node.
-        leaf_index:
-          type: integer
-          format: u-int64
-          description: The leaf index in the events accumulator tree.
-          minimum: 0
-    Hash:
-      type: string
-      description: Hex encoded hash
-    AccumulatorProof:
-      type: object
-      description: 'A proof that can be used authenticate an element in an accumulator given trusted root hash. For
-
-        example, both `TransactionInclusionProof` and `EventEmissionProof` can be constructed on top of
-
-        this structure.'
-      required:
-      - siblings
-      properties:
-        siblings:
-          type: array
-          items:
-            $ref: '#/components/schemas/Hash'
-          description: 'All siblings in this proof, including the default ones. Siblings are ordered from the bottom
-
-            level to the root level.'
-    AccountAddress:
-      type: string
-      description: Hex encoded account address.
-    EventsV3:
-      type: object
-      description: Events structure for v3 API
-      required:
-      - data
-      properties:
-        data:
-          $ref: '#/components/schemas/EventWithContextV3'
-    ErrResp:
-      type: object
-      required:
-      - message
-      properties:
-        message:
-          type: string
     EventsV4:
       type: object
       description: Events structure for v4 API
@@ -543,75 +615,3 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/EventWithContextV4'
-    TransactionInclusionAndEventEmissionProof:
-      type: object
-      description: 'Container for an event emission proof along with its corresponding transaction inclusion proof.
-
-
-        This structure bundles the proofs required to verify that a specific event was emitted in the
-
-        Supra network as part of a transaction that was successfully included in a block and finalized
-
-        in the network.'
-      required:
-      - transaction_inclusion_proof
-      - event_emission_proof
-      properties:
-        transaction_inclusion_proof:
-          $ref: '#/components/schemas/TransactionInclusionProof'
-        event_emission_proof:
-          $ref: '#/components/schemas/EventEmissionProof'
-    Guid:
-      type: object
-      description: A globally unique identifier derived from the sender's address and a counter
-      required:
-      - creation_number
-      - account_address
-      properties:
-        creation_number:
-          type: string
-          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
-        account_address:
-          $ref: '#/components/schemas/AccountAddress'
-          description: Address that created the GUID
-    EventWithContextV3:
-      type: object
-      description: Event wrapper with block height and transaction hash
-      required:
-      - event
-      - block_height
-      - transaction_hash
-      properties:
-        event:
-          $ref: '#/components/schemas/EventV1'
-        block_height:
-          type: integer
-          format: u-int64
-          description: The height of the block where the event was emitted
-          minimum: 0
-        transaction_hash:
-          $ref: '#/components/schemas/Hash'
-    EventWithContextV4:
-      type: object
-      description: Event wrapper with block height and transaction hash
-      required:
-      - event
-      - block_height
-      - transaction_hash
-      properties:
-        event:
-          $ref: '#/components/schemas/EventV2'
-        block_height:
-          type: integer
-          format: u-int64
-          description: The height of the block where the event was emitted
-          minimum: 0
-        transaction_hash:
-          $ref: '#/components/schemas/Hash'
-        proofs:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/TransactionInclusionAndEventEmissionProof'
-            description: 'Proofs required to verify that an event was emitted in a transaction that was finalized in
-
-              the network.'

@@ -1024,29 +1024,6 @@ paths:
                 $ref: '#/components/schemas/ErrResp'
 components:
   schemas:
-    AccountStatementV2:
-      type: object
-      required:
-      - record
-      properties:
-        record:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransactionInfoV2'
-    AccountCoinStatementV2:
-      type: object
-      required:
-      - record
-      - cursor
-      properties:
-        record:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransactionInfoV2'
-        cursor:
-          type: integer
-          format: u-int64
-          minimum: 0
     EvmTransactionOutput:
       oneOf:
       - type: object
@@ -1130,9 +1107,125 @@ components:
               message:
                 type: string
       description: API representation of the execution output of an Evm transaction.
+    Guid:
+      type: object
+      description: A globally unique identifier derived from the sender's address and a counter
+      required:
+      - creation_number
+      - account_address
+      properties:
+        creation_number:
+          type: string
+          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
+        account_address:
+          $ref: '#/components/schemas/AccountAddress'
+          description: Address that created the GUID
+    MoveModuleBytecode:
+      type: object
+      required:
+      - bytecode
+      - abi
+      properties:
+        bytecode:
+          type: string
+          description: Hex encoded bytecode
+        abi:
+          $ref: '#/components/schemas/MoveModule'
+    MoveModuleListV2:
+      type: object
+      required:
+      - modules
+      properties:
+        modules:
+          type: array
+          items:
+            $ref: '#/components/schemas/MoveModuleBytecode'
+        cursor:
+          type:
+          - string
+          - 'null'
+          description: 'Cursor specifying where to start for pagination.
+
+            Use the cursor returned by the API when making the next request.'
+    AccountStatementV2:
+      type: object
+      required:
+      - record
+      properties:
+        record:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionInfoV2'
+    Hash:
+      type: string
+      description: Hex encoded hash
+    TransactionOutputV1:
+      oneOf:
+      - type: object
+        required:
+        - Dkg
+        properties:
+          Dkg:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: string
+        enum:
+        - Empty
+      - type: object
+        required:
+        - Move
+        properties:
+          Move:
+            $ref: '#/components/schemas/MoveTransactionOutputV1'
+      - type: object
+        required:
+        - Oracle
+        properties:
+          Oracle:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: object
+        required:
+        - Evm
+        properties:
+          Evm:
+            $ref: '#/components/schemas/EvmTransactionOutput'
+      description: '[crate::v1::TransactionOutputV1] with all fields in human-readable format.'
     AccountAddress:
       type: string
       description: Hex encoded account address.
+    View:
+      type: object
+      required:
+      - epoch_id
+      - round
+      properties:
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: Identifier of the consensus epoch.
+        round:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the consensus round.
+    EventV1:
+      type: object
+      description: On-chain event.
+      required:
+      - guid
+      - sequence_number
+      - type
+      - data
+      properties:
+        guid:
+          $ref: '#/components/schemas/Guid'
+          description: The globally unique identifier of this event stream.
+        sequence_number:
+          type: string
+        type:
+          type: string
+          description: The `MoveType` of the event
+        data:
+          description: The JSON representation of the event
     TransactionInfoV2:
       type: object
       description: Information about a Supra transaction.
@@ -1166,134 +1259,40 @@ components:
           - type: 'null'
         status:
           $ref: '#/components/schemas/TxExecutionStatus'
-    Guid:
+    MoveResource:
       type: object
-      description: A globally unique identifier derived from the sender's address and a counter
+      description: A Move Resource.
       required:
-      - creation_number
-      - account_address
+      - type
+      - data
       properties:
-        creation_number:
+        type:
           type: string
-          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
-        account_address:
-          $ref: '#/components/schemas/AccountAddress'
-          description: Address that created the GUID
-    EvmTransferOperation:
-      type: object
-      description: This is a convenience structure wrapping [`TransferOperation`] to implement (de)serialization logic.
-      required:
-      - kind
-      - from
-      - to
-      - value
-      properties:
-        kind:
-          $ref: '#/components/schemas/EvmTransferKind'
-          description: Source of the transfer call.
-        from:
-          type: string
-          description: Sender of the transfer.
-        to:
-          type: string
-          description: Receiver of the transfer.
-        value:
-          type: string
-          description: Value of the transfer.
-    View:
-      type: object
-      required:
-      - epoch_id
-      - round
-      properties:
-        epoch_id:
-          $ref: '#/components/schemas/EpochId'
-          description: Identifier of the consensus epoch.
-        round:
-          oneOf:
-          - type: integer
-            format: u-int64
-            minimum: 0
-          description: Identifier of the consensus round.
-    TransactionV3:
-      oneOf:
-      - allOf:
-        - $ref: '#/components/schemas/TransactionInfoV2'
-        - type: object
-          required:
-          - txn_type
-          properties:
-            txn_type:
-              type: string
-              enum:
-              - user
-      - allOf:
-        - $ref: '#/components/schemas/TransactionInfoV2'
-        - type: object
-          required:
-          - txn_type
-          properties:
-            txn_type:
-              type: string
-              enum:
-              - automated
-      - allOf:
-        - $ref: '#/components/schemas/BlockMetadataInfoV3'
-        - type: object
-          required:
-          - txn_type
-          properties:
-            txn_type:
-              type: string
-              enum:
-              - block_metadata
-      - allOf:
-        - $ref: '#/components/schemas/AutomationRecordInfoV3'
-        - type: object
-          required:
-          - txn_type
-          properties:
-            txn_type:
-              type: string
-              enum:
-              - automation_record
-    MoveModuleBytecode:
-      type: object
-      required:
-      - bytecode
-      - abi
-      properties:
-        bytecode:
-          type: string
-          description: Hex encoded bytecode
-        abi:
-          $ref: '#/components/schemas/MoveModule'
-    Hash:
+        data:
+          type: object
+    Address:
+      $ref: '#/components/schemas/AccountAddress'
+      description: 'The address of an account
+
+
+        This is represented in a string as a 64 character hex string, sometimes
+
+        shortened by stripping leading 0s, and adding a 0x.'
+    EvmTransferKind:
       type: string
-      description: Hex encoded hash
-    MoveModule:
-      type: object
-      description: A Move module.
-      required:
-      - address
-      - name
-      - friends
-      - exposed_functions
-      - structs
-      properties:
-        address:
-          $ref: '#/components/schemas/Address'
-        name:
-          type: object
-        friends:
-          type: object
-          description: Friends of the module
-        exposed_functions:
-          type: object
-          description: Public functions of the module
-        structs:
-          type: object
-          description: Structs of the module
+      enum:
+      - call
+      - create
+      - create2
+      - selfdestruct
+    TxExecutionStatus:
+      type: string
+      enum:
+      - Success
+      - Fail
+      - Invalid
+      - PendingAfterExecution
+      - Pending
     AccountData:
       type: object
       description: Datatype that holds the sequence number and account authentication key.
@@ -1307,133 +1306,33 @@ components:
           minimum: 0
         authentication_key:
           $ref: '#/components/schemas/Hash'
-    MoveModuleListV2:
-      type: object
-      required:
-      - modules
-      properties:
-        modules:
-          type: array
-          items:
-            $ref: '#/components/schemas/MoveModuleBytecode'
-        cursor:
-          type:
-          - string
-          - 'null'
-          description: 'Cursor specifying where to start for pagination.
-
-            Use the cursor returned by the API when making the next request.'
-    ErrResp:
-      type: object
-      required:
-      - message
-      properties:
-        message:
-          type: string
-    MoveResource:
-      type: object
-      description: A Move Resource.
-      required:
-      - type
-      - data
-      properties:
-        type:
-          type: string
-        data:
-          type: object
     Identity:
       type: string
       description: Hex encoded identity.
-    AccountStatementV3:
-      type: array
-      items:
-        $ref: '#/components/schemas/TransactionV3'
-      description: Account transactions of [TransactionV3] type.
-    TransactionOutputV1:
-      oneOf:
-      - type: object
-        required:
-        - Dkg
-        properties:
-          Dkg:
-            $ref: '#/components/schemas/TxExecutionStatus'
-      - type: string
-        enum:
-        - Empty
-      - type: object
-        required:
-        - Move
-        properties:
-          Move:
-            $ref: '#/components/schemas/MoveTransactionOutputV1'
-      - type: object
-        required:
-        - Oracle
-        properties:
-          Oracle:
-            $ref: '#/components/schemas/TxExecutionStatus'
-      - type: object
-        required:
-        - Evm
-        properties:
-          Evm:
-            $ref: '#/components/schemas/EvmTransactionOutput'
-      description: '[crate::v1::TransactionOutputV1] with all fields in human-readable format.'
-    Address:
-      $ref: '#/components/schemas/AccountAddress'
-      description: 'The address of an account
-
-
-        This is represented in a string as a 64 character hex string, sometimes
-
-        shortened by stripping leading 0s, and adding a 0x.'
-    BlockHeaderInfo:
+    AccountCoinStatementV2:
       type: object
-      description: Metadata about a Supra block.
       required:
-      - author
-      - hash
-      - height
-      - parent
-      - timestamp
-      - view
+      - record
+      - cursor
       properties:
-        author:
-          $ref: '#/components/schemas/Identity'
-        hash:
-          $ref: '#/components/schemas/Hash'
-        height:
-          oneOf:
-          - type: integer
-            format: u-int64
-            minimum: 0
-          description: Number of blocks before this block in the chain (including the genesis block).
-        parent:
-          $ref: '#/components/schemas/Hash'
-        timestamp:
-          $ref: '#/components/schemas/SmrTimestamp'
-        view:
-          $ref: '#/components/schemas/View'
-    MoveTransactionOutputV1:
-      type: object
-      description: The execution output of a Move transaction.
-      required:
-      - gas_used
-      - events
-      - vm_status
-      properties:
-        gas_used:
-          type: integer
-          format: u-int64
-          description: The gas used by the transaction.
-          minimum: 0
-        events:
+        record:
           type: array
           items:
-            $ref: '#/components/schemas/EventV1'
-        vm_status:
-          type: string
-          description: A message summarizing the execution result produced by the MoveVM.
+            $ref: '#/components/schemas/TransactionInfoV2'
+        cursor:
+          type: integer
+          format: u-int64
+          minimum: 0
+    SmrTimestamp:
+      type: object
+      required:
+      - timestamp
+      properties:
+        timestamp:
+          type: integer
+          format: u-int64
+          description: The timestamp as measured in the number of microseconds since the unix epoch.
+          minimum: 0
     EpochId:
       type: object
       required:
@@ -1452,6 +1351,11 @@ components:
             format: u-int64
             minimum: 0
           description: Identifier of the epoch within the context of `chain_id`.
+    AccountStatementV3:
+      type: array
+      items:
+        $ref: '#/components/schemas/TransactionV3'
+      description: Account transactions of [TransactionV3] type.
     MoveResourcesResponse:
       type: object
       required:
@@ -1505,43 +1409,6 @@ components:
             format: u-int64
             minimum: 0
           description: The maximum amount of gas that the sender is willing to spend.
-    EventV1:
-      type: object
-      description: On-chain event.
-      required:
-      - guid
-      - sequence_number
-      - type
-      - data
-      properties:
-        guid:
-          $ref: '#/components/schemas/Guid'
-          description: The globally unique identifier of this event stream.
-        sequence_number:
-          type: string
-        type:
-          type: string
-          description: The `MoveType` of the event
-        data:
-          description: The JSON representation of the event
-    SmrTimestamp:
-      type: object
-      required:
-      - timestamp
-      properties:
-        timestamp:
-          type: integer
-          format: u-int64
-          description: The timestamp as measured in the number of microseconds since the unix epoch.
-          minimum: 0
-    TxExecutionStatus:
-      type: string
-      enum:
-      - Success
-      - Fail
-      - Invalid
-      - PendingAfterExecution
-      - Pending
     BlockMetadataInfoV3:
       type: object
       description: Details of block metadata transaction execution
@@ -1563,10 +1430,143 @@ components:
           $ref: '#/components/schemas/TransactionOutputV1'
         status:
           $ref: '#/components/schemas/TxExecutionStatus'
-    EvmTransferKind:
-      type: string
-      enum:
-      - call
-      - create
-      - create2
-      - selfdestruct
+    BlockHeaderInfo:
+      type: object
+      description: Metadata about a Supra block.
+      required:
+      - author
+      - hash
+      - height
+      - parent
+      - timestamp
+      - view
+      properties:
+        author:
+          $ref: '#/components/schemas/Identity'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        height:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Number of blocks before this block in the chain (including the genesis block).
+        parent:
+          $ref: '#/components/schemas/Hash'
+        timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+        view:
+          $ref: '#/components/schemas/View'
+    MoveTransactionOutputV1:
+      type: object
+      description: The execution output of a Move transaction.
+      required:
+      - gas_used
+      - events
+      - vm_status
+      properties:
+        gas_used:
+          type: integer
+          format: u-int64
+          description: The gas used by the transaction.
+          minimum: 0
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventV1'
+        vm_status:
+          type: string
+          description: A message summarizing the execution result produced by the MoveVM.
+    TransactionV3:
+      oneOf:
+      - allOf:
+        - $ref: '#/components/schemas/TransactionInfoV2'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - user
+      - allOf:
+        - $ref: '#/components/schemas/TransactionInfoV2'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - automated
+      - allOf:
+        - $ref: '#/components/schemas/BlockMetadataInfoV3'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - block_metadata
+      - allOf:
+        - $ref: '#/components/schemas/AutomationRecordInfoV3'
+        - type: object
+          required:
+          - txn_type
+          properties:
+            txn_type:
+              type: string
+              enum:
+              - automation_record
+    MoveModule:
+      type: object
+      description: A Move module.
+      required:
+      - address
+      - name
+      - friends
+      - exposed_functions
+      - structs
+      properties:
+        address:
+          $ref: '#/components/schemas/Address'
+        name:
+          type: object
+        friends:
+          type: object
+          description: Friends of the module
+        exposed_functions:
+          type: object
+          description: Public functions of the module
+        structs:
+          type: object
+          description: Structs of the module
+    EvmTransferOperation:
+      type: object
+      description: This is a convenience structure wrapping [`TransferOperation`] to implement (de)serialization logic.
+      required:
+      - kind
+      - from
+      - to
+      - value
+      properties:
+        kind:
+          $ref: '#/components/schemas/EvmTransferKind'
+          description: Source of the transfer call.
+        from:
+          type: string
+          description: Sender of the transfer.
+        to:
+          type: string
+          description: Receiver of the transfer.
+        value:
+          type: string
+          description: Value of the transfer.
+    ErrResp:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string

@@ -112,16 +112,6 @@ paths:
                 $ref: '#/components/schemas/MoveValueResponseV2'
 components:
   schemas:
-    MoveValueResponseV2:
-      type: object
-      description: Datatype for representing the MoveValue
-      required:
-      - result
-      properties:
-        result:
-          type: array
-          items:
-            $ref: '#/components/schemas/MoveValue'
     MoveValue:
       oneOf:
       - type: object
@@ -245,6 +235,16 @@ components:
             type: string
             description: A string Move type
       description: An enum of the possible Move value types.
+    MoveValueResponseV2:
+      type: object
+      description: Datatype for representing the MoveValue
+      required:
+      - result
+      properties:
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/MoveValue'
     ViewRequest:
       type: object
       description: View request for the Move View Function API.

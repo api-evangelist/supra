@@ -193,9 +193,89 @@ components:
               message:
                 type: string
       description: API representation of the execution output of an Evm transaction.
+    Guid:
+      type: object
+      description: A globally unique identifier derived from the sender's address and a counter
+      required:
+      - creation_number
+      - account_address
+      properties:
+        creation_number:
+          type: string
+          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
+        account_address:
+          $ref: '#/components/schemas/AccountAddress'
+          description: Address that created the GUID
+    Hash:
+      type: string
+      description: Hex encoded hash
+    TransactionOutputV1:
+      oneOf:
+      - type: object
+        required:
+        - Dkg
+        properties:
+          Dkg:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: string
+        enum:
+        - Empty
+      - type: object
+        required:
+        - Move
+        properties:
+          Move:
+            $ref: '#/components/schemas/MoveTransactionOutputV1'
+      - type: object
+        required:
+        - Oracle
+        properties:
+          Oracle:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: object
+        required:
+        - Evm
+        properties:
+          Evm:
+            $ref: '#/components/schemas/EvmTransactionOutput'
+      description: '[crate::v1::TransactionOutputV1] with all fields in human-readable format.'
     AccountAddress:
       type: string
       description: Hex encoded account address.
+    View:
+      type: object
+      required:
+      - epoch_id
+      - round
+      properties:
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: Identifier of the consensus epoch.
+        round:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the consensus round.
+    EventV1:
+      type: object
+      description: On-chain event.
+      required:
+      - guid
+      - sequence_number
+      - type
+      - data
+      properties:
+        guid:
+          $ref: '#/components/schemas/Guid'
+          description: The globally unique identifier of this event stream.
+        sequence_number:
+          type: string
+        type:
+          type: string
+          description: The `MoveType` of the event
+        data:
+          description: The JSON representation of the event
     TransactionInfoV2:
       type: object
       description: Information about a Supra transaction.
@@ -229,58 +309,91 @@ components:
           - type: 'null'
         status:
           $ref: '#/components/schemas/TxExecutionStatus'
-    Guid:
-      type: object
-      description: A globally unique identifier derived from the sender's address and a counter
-      required:
-      - creation_number
-      - account_address
-      properties:
-        creation_number:
-          type: string
-          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
-        account_address:
-          $ref: '#/components/schemas/AccountAddress'
-          description: Address that created the GUID
-    EvmTransferOperation:
-      type: object
-      description: This is a convenience structure wrapping [`TransferOperation`] to implement (de)serialization logic.
-      required:
-      - kind
-      - from
-      - to
-      - value
-      properties:
-        kind:
-          $ref: '#/components/schemas/EvmTransferKind'
-          description: Source of the transfer call.
-        from:
-          type: string
-          description: Sender of the transfer.
-        to:
-          type: string
-          description: Receiver of the transfer.
-        value:
-          type: string
-          description: Value of the transfer.
-    View:
+    EvmTransferKind:
+      type: string
+      enum:
+      - call
+      - create
+      - create2
+      - selfdestruct
+    TxExecutionStatus:
+      type: string
+      enum:
+      - Success
+      - Fail
+      - Invalid
+      - PendingAfterExecution
+      - Pending
+    Identity:
+      type: string
+      description: Hex encoded identity.
+    SmrTimestamp:
       type: object
       required:
-      - epoch_id
-      - round
+      - timestamp
       properties:
-        epoch_id:
-          $ref: '#/components/schemas/EpochId'
-          description: Identifier of the consensus epoch.
-        round:
+        timestamp:
+          type: integer
+          format: u-int64
+          description: The timestamp as measured in the number of microseconds since the unix epoch.
+          minimum: 0
+    EpochId:
+      type: object
+      required:
+      - chain_id
+      - epoch
+      properties:
+        chain_id:
+          oneOf:
+          - type: integer
+            format: u-int8
+            minimum: 0
+          description: Unique identifier for this instance of the SMR.
+        epoch:
           oneOf:
           - type: integer
             format: u-int64
             minimum: 0
-          description: Identifier of the consensus round.
-    Hash:
-      type: string
-      description: Hex encoded hash
+          description: Identifier of the epoch within the context of `chain_id`.
+    SmrTransactionHeader:
+      type: object
+      required:
+      - chain_id
+      - expiration_timestamp
+      - sender
+      - sequence_number
+      - gas_unit_price
+      - max_gas_amount
+      properties:
+        chain_id:
+          type: integer
+          format: u-int64
+          description: 'The unique identifier for the instance of the Supra chain that this transaction should
+
+            be executed upon.'
+          minimum: 0
+        expiration_timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+          description: The time at which this transaction should be discarded if it has not been executed.
+        sender:
+          $ref: '#/components/schemas/AccountAddress'
+          description: The standardized representation of the sender's account address in the target VM.
+        sequence_number:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: The sequence number of the sender's account in the target VM.
+        gas_unit_price:
+          type: integer
+          description: The amount of Supra that the sender is willing to pay per unit of gas.
+          minimum: 0
+        max_gas_amount:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: The maximum amount of gas that the sender is willing to spend.
     FaucetStatus:
       oneOf:
       - type: object
@@ -292,39 +405,6 @@ components:
       - type: string
         enum:
         - TryLater
-    Identity:
-      type: string
-      description: Hex encoded identity.
-    TransactionOutputV1:
-      oneOf:
-      - type: object
-        required:
-        - Dkg
-        properties:
-          Dkg:
-            $ref: '#/components/schemas/TxExecutionStatus'
-      - type: string
-        enum:
-        - Empty
-      - type: object
-        required:
-        - Move
-        properties:
-          Move:
-            $ref: '#/components/schemas/MoveTransactionOutputV1'
-      - type: object
-        required:
-        - Oracle
-        properties:
-          Oracle:
-            $ref: '#/components/schemas/TxExecutionStatus'
-      - type: object
-        required:
-        - Evm
-        properties:
-          Evm:
-            $ref: '#/components/schemas/EvmTransactionOutput'
-      description: '[crate::v1::TransactionOutputV1] with all fields in human-readable format.'
     BlockHeaderInfo:
       type: object
       description: Metadata about a Supra block.
@@ -372,24 +452,6 @@ components:
         vm_status:
           type: string
           description: A message summarizing the execution result produced by the MoveVM.
-    EpochId:
-      type: object
-      required:
-      - chain_id
-      - epoch
-      properties:
-        chain_id:
-          oneOf:
-          - type: integer
-            format: u-int8
-            minimum: 0
-          description: Unique identifier for this instance of the SMR.
-        epoch:
-          oneOf:
-          - type: integer
-            format: u-int64
-            minimum: 0
-          description: Identifier of the epoch within the context of `chain_id`.
     TransactionInfoV1:
       type: object
       description: Information about a Supra transaction.
@@ -423,82 +485,27 @@ components:
           - type: 'null'
         status:
           $ref: '#/components/schemas/TxExecutionStatus'
-    SmrTransactionHeader:
+    EvmTransferOperation:
       type: object
+      description: This is a convenience structure wrapping [`TransferOperation`] to implement (de)serialization logic.
       required:
-      - chain_id
-      - expiration_timestamp
-      - sender
-      - sequence_number
-      - gas_unit_price
-      - max_gas_amount
+      - kind
+      - from
+      - to
+      - value
       properties:
-        chain_id:
-          type: integer
-          format: u-int64
-          description: 'The unique identifier for the instance of the Supra chain that this transaction should
-
-            be executed upon.'
-          minimum: 0
-        expiration_timestamp:
-          $ref: '#/components/schemas/SmrTimestamp'
-          description: The time at which this transaction should be discarded if it has not been executed.
-        sender:
-          $ref: '#/components/schemas/AccountAddress'
-          description: The standardized representation of the sender's account address in the target VM.
-        sequence_number:
-          oneOf:
-          - type: integer
-            format: u-int64
-            minimum: 0
-          description: The sequence number of the sender's account in the target VM.
-        gas_unit_price:
-          type: integer
-          description: The amount of Supra that the sender is willing to pay per unit of gas.
-          minimum: 0
-        max_gas_amount:
-          oneOf:
-          - type: integer
-            format: u-int64
-            minimum: 0
-          description: The maximum amount of gas that the sender is willing to spend.
-    EventV1:
-      type: object
-      description: On-chain event.
-      required:
-      - guid
-      - sequence_number
-      - type
-      - data
-      properties:
-        guid:
-          $ref: '#/components/schemas/Guid'
-          description: The globally unique identifier of this event stream.
-        sequence_number:
+        kind:
+          $ref: '#/components/schemas/EvmTransferKind'
+          description: Source of the transfer call.
+        from:
           type: string
-        type:
+          description: Sender of the transfer.
+        to:
           type: string
-          description: The `MoveType` of the event
-        data:
-          description: The JSON representation of the event
-    SmrTimestamp:
-      type: object
-      required:
-      - timestamp
-      properties:
-        timestamp:
-          type: integer
-          format: u-int64
-          description: The timestamp as measured in the number of microseconds since the unix epoch.
-          minimum: 0
-    TxExecutionStatus:
-      type: string
-      enum:
-      - Success
-      - Fail
-      - Invalid
-      - PendingAfterExecution
-      - Pending
+          description: Receiver of the transfer.
+        value:
+          type: string
+          description: Value of the transfer.
     TransactionBlockInfo:
       type: object
       description: Metadata about the block that finalized a particular [SmrTransaction].
@@ -518,10 +525,3 @@ components:
         timestamp:
           $ref: '#/components/schemas/SmrTimestamp'
       deprecated: true
-    EvmTransferKind:
-      type: string
-      enum:
-      - call
-      - create
-      - create2
-      - selfdestruct
