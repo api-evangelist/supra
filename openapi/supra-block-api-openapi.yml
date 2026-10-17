@@ -396,674 +396,6 @@ paths:
                 $ref: '#/components/schemas/ErrResp'
 components:
   schemas:
-    BlockV3:
-      type: object
-      description: The API representation of a Supra block.
-      required:
-      - header
-      properties:
-        header:
-          $ref: '#/components/schemas/BlockHeaderInfo'
-          description: Metadata about the block.
-        execution_statistics:
-          oneOf:
-          - type: object
-            description: Executed block statistics collected based on execution results.
-            properties:
-              automated_txn_count:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Number of the automated transactions executed/finalized in scope of the block.
-                minimum: 0
-              automated_txn_gas_unit_price:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Gas unit price defined by the chain for all automated transactions.
-                minimum: 0
-              block_gas_unit_price_min:
-                type:
-                - integer
-                - 'null'
-                description: Minimum gas unit price of the transactions included in the block.
-                minimum: 0
-              block_gas_unit_price_max:
-                type:
-                - integer
-                - 'null'
-                description: Maximum gas unit price of the transactions included in the block.
-                minimum: 0
-              block_total_user_gas_used:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Total used gas by user submitted transactions in the block.
-                minimum: 0
-              block_total_automated_gas_used:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Total used gas by automated transactions executed in scope of the block.
-                minimum: 0
-              user_txn_count:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Number of the user submitted transactions executed/finalized in scope of the block.
-                minimum: 0
-              automation_record_count:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Number of the automation registry records executed/finalized in scope of the block.
-                minimum: 0
-          - type: 'null'
-        transactions:
-          oneOf:
-          - type: array
-            items:
-              oneOf:
-              - allOf:
-                - $ref: '#/components/schemas/TransactionInfoV2'
-                - type: object
-                  required:
-                  - txn_type
-                  properties:
-                    txn_type:
-                      type: string
-                      enum:
-                      - user
-              - allOf:
-                - $ref: '#/components/schemas/TransactionInfoV2'
-                - type: object
-                  required:
-                  - txn_type
-                  properties:
-                    txn_type:
-                      type: string
-                      enum:
-                      - automated
-              - allOf:
-                - $ref: '#/components/schemas/BlockMetadataInfoV3'
-                - type: object
-                  required:
-                  - txn_type
-                  properties:
-                    txn_type:
-                      type: string
-                      enum:
-                      - block_metadata
-              - allOf:
-                - $ref: '#/components/schemas/AutomationRecordInfoV3'
-                - type: object
-                  required:
-                  - txn_type
-                  properties:
-                    txn_type:
-                      type: string
-                      enum:
-                      - automation_record
-          - type: 'null'
-    EvmTransactionOutput:
-      oneOf:
-      - type: object
-        description: Returned successfully
-        required:
-        - Success
-        properties:
-          Success:
-            type: object
-            description: Returned successfully
-            required:
-            - reason
-            - gas_used
-            - gas_refunded
-            - logs
-            - output
-            properties:
-              reason: {}
-              gas_used:
-                type: integer
-                format: u-int64
-                minimum: 0
-              gas_refunded:
-                type: integer
-                format: u-int64
-                minimum: 0
-              logs: {}
-              output: {}
-              transfers:
-                type: array
-                items:
-                  $ref: '#/components/schemas/EvmTransferOperation'
-                description: A list of transfer operations during the transaction execution.
-      - type: object
-        description: Reverted by `REVERT` opcode that doesn't spend all gas.
-        required:
-        - Revert
-        properties:
-          Revert:
-            type: object
-            description: Reverted by `REVERT` opcode that doesn't spend all gas.
-            required:
-            - gas_used
-            - output
-            properties:
-              gas_used:
-                type: integer
-                format: u-int64
-                minimum: 0
-              output:
-                type: string
-      - type: object
-        description: Reverted for various reasons and spend all gas.
-        required:
-        - Halt
-        properties:
-          Halt:
-            type: object
-            description: Reverted for various reasons and spend all gas.
-            required:
-            - reason
-            - gas_used
-            properties:
-              reason: {}
-              gas_used:
-                type: integer
-                format: u-int64
-                description: Halting will spend all the gas, and will be equal to gas_limit.
-                minimum: 0
-      - type: object
-        description: Error occurred during execution.
-        required:
-        - Error
-        properties:
-          Error:
-            type: object
-            description: Error occurred during execution.
-            required:
-            - message
-            properties:
-              message:
-                type: string
-      description: API representation of the execution output of an Evm transaction.
-    Guid:
-      type: object
-      description: A globally unique identifier derived from the sender's address and a counter
-      required:
-      - creation_number
-      - account_address
-      properties:
-        creation_number:
-          type: string
-          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
-        account_address:
-          $ref: '#/components/schemas/AccountAddress'
-          description: Address that created the GUID
-    BlockMetadataInfoV4:
-      type: object
-      description: Details of block metadata transaction execution
-      required:
-      - hash
-      - output
-      - status
-      properties:
-        hash:
-          $ref: '#/components/schemas/Hash'
-        block_header:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/BlockHeaderInfo'
-            description: 'Metadata about the block containing the transaction, if any.
-
-              This field will not be set for transactions that are returned as a part of a block.'
-        output:
-          $ref: '#/components/schemas/TransactionOutputV4'
-        status:
-          $ref: '#/components/schemas/TxExecutionStatus'
-        inclusion_proof:
-          $ref: '#/components/schemas/TransactionInclusionProof'
-    TransactionInfoV4:
-      type: object
-      description: Information about a Supra transaction.
-      required:
-      - authenticator
-      - hash
-      - header
-      - payload
-      - status
-      properties:
-        authenticator:
-          type: object
-          description: The cryptographic material that was submitted with the transaction, according to its type.
-        block_header:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/BlockHeaderInfo'
-            description: 'Metadata about the block containing the transaction, if any. This field should
-
-              not be set if this [TransactionInfoV4] is yet to be included in a [Block].'
-        hash:
-          $ref: '#/components/schemas/Hash'
-        header:
-          $ref: '#/components/schemas/SmrTransactionHeader'
-        payload:
-          type: object
-          description: The deserialized payload of the transaction according to its type.
-        output:
-          oneOf:
-          - $ref: '#/components/schemas/TransactionOutputV4'
-          - type: 'null'
-        status:
-          $ref: '#/components/schemas/TxExecutionStatus'
-        inclusion_proof:
-          $ref: '#/components/schemas/TransactionInclusionProof'
-    Hash:
-      type: string
-      description: Hex encoded hash
-    TransactionOutputV1:
-      oneOf:
-      - type: object
-        required:
-        - Dkg
-        properties:
-          Dkg:
-            $ref: '#/components/schemas/TxExecutionStatus'
-      - type: string
-        enum:
-        - Empty
-      - type: object
-        required:
-        - Move
-        properties:
-          Move:
-            $ref: '#/components/schemas/MoveTransactionOutputV1'
-      - type: object
-        required:
-        - Oracle
-        properties:
-          Oracle:
-            $ref: '#/components/schemas/TxExecutionStatus'
-      - type: object
-        required:
-        - Evm
-        properties:
-          Evm:
-            $ref: '#/components/schemas/EvmTransactionOutput'
-      description: '[crate::v1::TransactionOutputV1] with all fields in human-readable format.'
-    AccountAddress:
-      type: string
-      description: Hex encoded account address.
-    View:
-      type: object
-      required:
-      - epoch_id
-      - round
-      properties:
-        epoch_id:
-          $ref: '#/components/schemas/EpochId'
-          description: Identifier of the consensus epoch.
-        round:
-          oneOf:
-          - type: integer
-            format: u-int64
-            minimum: 0
-          description: Identifier of the consensus round.
-    EventV1:
-      type: object
-      description: On-chain event.
-      required:
-      - guid
-      - sequence_number
-      - type
-      - data
-      properties:
-        guid:
-          $ref: '#/components/schemas/Guid'
-          description: The globally unique identifier of this event stream.
-        sequence_number:
-          type: string
-        type:
-          type: string
-          description: The `MoveType` of the event
-        data:
-          description: The JSON representation of the event
-    u64:
-      type: integer
-      format: u-int64
-      minimum: 0
-    TransactionInfoV2:
-      type: object
-      description: Information about a Supra transaction.
-      required:
-      - authenticator
-      - hash
-      - header
-      - payload
-      - status
-      properties:
-        authenticator:
-          type: object
-          description: The cryptographic material that was submitted with the transaction, according to its type.
-        block_header:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/BlockHeaderInfo'
-            description: 'Metadata about the block containing the transaction, if any. This field should
-
-              not be set if this [TransactionInfoV2] is yet to be included in a [Block].'
-        hash:
-          $ref: '#/components/schemas/Hash'
-        header:
-          $ref: '#/components/schemas/SmrTransactionHeader'
-        payload:
-          type: object
-          description: The deserialized payload of the transaction according to its type.
-        output:
-          oneOf:
-          - $ref: '#/components/schemas/TransactionOutputV1'
-          - type: 'null'
-        status:
-          $ref: '#/components/schemas/TxExecutionStatus'
-    EvmTransferKind:
-      type: string
-      enum:
-      - call
-      - create
-      - create2
-      - selfdestruct
-    TxExecutionStatus:
-      type: string
-      enum:
-      - Success
-      - Fail
-      - Invalid
-      - PendingAfterExecution
-      - Pending
-    EventV2:
-      type: object
-      description: On-chain event v2.
-      required:
-      - guid
-      - sequence_number
-      - type
-      - data
-      - hash
-      properties:
-        guid:
-          $ref: '#/components/schemas/Guid'
-          description: The globally unique identifier of this event stream.
-        sequence_number:
-          type: string
-        type:
-          type: string
-          description: The `MoveType` of the event
-        data:
-          description: The JSON representation of the event
-        hash:
-          type: string
-          description: The hash of the event, derived from `RLP(event)` + `keccak256`.
-    Identity:
-      type: string
-      description: Hex encoded identity.
-    SmrTimestamp:
-      type: object
-      required:
-      - timestamp
-      properties:
-        timestamp:
-          type: integer
-          format: u-int64
-          description: The timestamp as measured in the number of microseconds since the unix epoch.
-          minimum: 0
-    EpochId:
-      type: object
-      required:
-      - chain_id
-      - epoch
-      properties:
-        chain_id:
-          oneOf:
-          - type: integer
-            format: u-int8
-            minimum: 0
-          description: Unique identifier for this instance of the SMR.
-        epoch:
-          oneOf:
-          - type: integer
-            format: u-int64
-            minimum: 0
-          description: Identifier of the epoch within the context of `chain_id`.
-    TransactionOutputV4:
-      oneOf:
-      - type: object
-        required:
-        - Dkg
-        properties:
-          Dkg:
-            $ref: '#/components/schemas/TxExecutionStatus'
-      - type: string
-        enum:
-        - Empty
-      - type: object
-        required:
-        - Move
-        properties:
-          Move:
-            $ref: '#/components/schemas/MoveTransactionOutputV4'
-      - type: object
-        required:
-        - Oracle
-        properties:
-          Oracle:
-            $ref: '#/components/schemas/TxExecutionStatus'
-      - type: object
-        required:
-        - Evm
-        properties:
-          Evm:
-            $ref: '#/components/schemas/EvmTransactionOutput'
-      description: '[crate::v4::TransactionOutputV4] with all fields in human-readable format.'
-    SmrTransactionHeader:
-      type: object
-      required:
-      - chain_id
-      - expiration_timestamp
-      - sender
-      - sequence_number
-      - gas_unit_price
-      - max_gas_amount
-      properties:
-        chain_id:
-          type: integer
-          format: u-int64
-          description: 'The unique identifier for the instance of the Supra chain that this transaction should
-
-            be executed upon.'
-          minimum: 0
-        expiration_timestamp:
-          $ref: '#/components/schemas/SmrTimestamp'
-          description: The time at which this transaction should be discarded if it has not been executed.
-        sender:
-          $ref: '#/components/schemas/AccountAddress'
-          description: The standardized representation of the sender's account address in the target VM.
-        sequence_number:
-          oneOf:
-          - type: integer
-            format: u-int64
-            minimum: 0
-          description: The sequence number of the sender's account in the target VM.
-        gas_unit_price:
-          type: integer
-          description: The amount of Supra that the sender is willing to pay per unit of gas.
-          minimum: 0
-        max_gas_amount:
-          oneOf:
-          - type: integer
-            format: u-int64
-            minimum: 0
-          description: The maximum amount of gas that the sender is willing to spend.
-    BlockMetadataInfoV3:
-      type: object
-      description: Details of block metadata transaction execution
-      required:
-      - hash
-      - output
-      - status
-      properties:
-        hash:
-          $ref: '#/components/schemas/Hash'
-        block_header:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/BlockHeaderInfo'
-            description: 'Metadata about the block containing the transaction, if any.
-
-              This field will not be set for transactions that are returned as a part of a block.'
-        output:
-          $ref: '#/components/schemas/TransactionOutputV1'
-        status:
-          $ref: '#/components/schemas/TxExecutionStatus'
-    AccumulatorProof:
-      type: object
-      description: 'A proof that can be used authenticate an element in an accumulator given trusted root hash. For
-
-        example, both `TransactionInclusionProof` and `EventEmissionProof` can be constructed on top of
-
-        this structure.'
-      required:
-      - siblings
-      properties:
-        siblings:
-          type: array
-          items:
-            $ref: '#/components/schemas/Hash'
-          description: 'All siblings in this proof, including the default ones. Siblings are ordered from the bottom
-
-            level to the root level.'
-    BlockHeaderInfo:
-      type: object
-      description: Metadata about a Supra block.
-      required:
-      - author
-      - hash
-      - height
-      - parent
-      - timestamp
-      - view
-      properties:
-        author:
-          $ref: '#/components/schemas/Identity'
-        hash:
-          $ref: '#/components/schemas/Hash'
-        height:
-          oneOf:
-          - type: integer
-            format: u-int64
-            minimum: 0
-          description: Number of blocks before this block in the chain (including the genesis block).
-        parent:
-          $ref: '#/components/schemas/Hash'
-        timestamp:
-          $ref: '#/components/schemas/SmrTimestamp'
-        view:
-          $ref: '#/components/schemas/View'
-    MoveTransactionOutputV1:
-      type: object
-      description: The execution output of a Move transaction.
-      required:
-      - gas_used
-      - events
-      - vm_status
-      properties:
-        gas_used:
-          type: integer
-          format: u-int64
-          description: The gas used by the transaction.
-          minimum: 0
-        events:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventV1'
-        vm_status:
-          type: string
-          description: A message summarizing the execution result produced by the MoveVM.
-    ExecutedBlockInfo:
-      type: object
-      description: Block metadata and existing statistics collected on executed block output.
-      required:
-      - header
-      properties:
-        header:
-          $ref: '#/components/schemas/BlockHeaderInfo'
-          description: Metadata about the block.
-        execution_statistics:
-          oneOf:
-          - type: object
-            description: Executed block statistics collected based on execution results.
-            properties:
-              automated_txn_count:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Number of the automated transactions executed/finalized in scope of the block.
-                minimum: 0
-              automated_txn_gas_unit_price:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Gas unit price defined by the chain for all automated transactions.
-                minimum: 0
-              block_gas_unit_price_min:
-                type:
-                - integer
-                - 'null'
-                description: Minimum gas unit price of the transactions included in the block.
-                minimum: 0
-              block_gas_unit_price_max:
-                type:
-                - integer
-                - 'null'
-                description: Maximum gas unit price of the transactions included in the block.
-                minimum: 0
-              block_total_user_gas_used:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Total used gas by user submitted transactions in the block.
-                minimum: 0
-              block_total_automated_gas_used:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Total used gas by automated transactions executed in scope of the block.
-                minimum: 0
-              user_txn_count:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Number of the user submitted transactions executed/finalized in scope of the block.
-                minimum: 0
-              automation_record_count:
-                type:
-                - integer
-                - 'null'
-                format: u-int64
-                description: Number of the automation registry records executed/finalized in scope of the block.
-                minimum: 0
-          - type: 'null'
     BlockV4:
       type: object
       description: The API representation of a Supra block.
@@ -1179,26 +511,214 @@ components:
                       enum:
                       - automation_record
           - type: 'null'
-    MoveTransactionOutputV4:
+    EventV1:
       type: object
-      description: The execution output of a Move transaction.
+      description: On-chain event.
       required:
-      - gas_used
-      - events
-      - vm_status
+      - guid
+      - sequence_number
+      - type
+      - data
       properties:
-        gas_used:
-          type: integer
-          format: u-int64
-          description: The gas used by the transaction.
-          minimum: 0
-        events:
+        guid:
+          $ref: '#/components/schemas/Guid'
+          description: The globally unique identifier of this event stream.
+        sequence_number:
+          type: string
+        type:
+          type: string
+          description: The `MoveType` of the event
+        data:
+          description: The JSON representation of the event
+    EventV2:
+      type: object
+      description: On-chain event v2.
+      required:
+      - guid
+      - sequence_number
+      - type
+      - data
+      - hash
+      properties:
+        guid:
+          $ref: '#/components/schemas/Guid'
+          description: The globally unique identifier of this event stream.
+        sequence_number:
+          type: string
+        type:
+          type: string
+          description: The `MoveType` of the event
+        data:
+          description: The JSON representation of the event
+        hash:
+          type: string
+          description: The hash of the event, derived from `RLP(event)` + `keccak256`.
+    EvmTransactionOutput:
+      oneOf:
+      - type: object
+        description: Returned successfully
+        required:
+        - Success
+        properties:
+          Success:
+            type: object
+            description: Returned successfully
+            required:
+            - reason
+            - gas_used
+            - gas_refunded
+            - logs
+            - output
+            properties:
+              reason: {}
+              gas_used:
+                type: integer
+                format: u-int64
+                minimum: 0
+              gas_refunded:
+                type: integer
+                format: u-int64
+                minimum: 0
+              logs: {}
+              output: {}
+              transfers:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EvmTransferOperation'
+                description: A list of transfer operations during the transaction execution.
+      - type: object
+        description: Reverted by `REVERT` opcode that doesn't spend all gas.
+        required:
+        - Revert
+        properties:
+          Revert:
+            type: object
+            description: Reverted by `REVERT` opcode that doesn't spend all gas.
+            required:
+            - gas_used
+            - output
+            properties:
+              gas_used:
+                type: integer
+                format: u-int64
+                minimum: 0
+              output:
+                type: string
+      - type: object
+        description: Reverted for various reasons and spend all gas.
+        required:
+        - Halt
+        properties:
+          Halt:
+            type: object
+            description: Reverted for various reasons and spend all gas.
+            required:
+            - reason
+            - gas_used
+            properties:
+              reason: {}
+              gas_used:
+                type: integer
+                format: u-int64
+                description: Halting will spend all the gas, and will be equal to gas_limit.
+                minimum: 0
+      - type: object
+        description: Error occurred during execution.
+        required:
+        - Error
+        properties:
+          Error:
+            type: object
+            description: Error occurred during execution.
+            required:
+            - message
+            properties:
+              message:
+                type: string
+      description: API representation of the execution output of an Evm transaction.
+    EvmTransferKind:
+      type: string
+      enum:
+      - call
+      - create
+      - create2
+      - selfdestruct
+    AccumulatorProof:
+      type: object
+      description: 'A proof that can be used authenticate an element in an accumulator given trusted root hash. For
+
+        example, both `TransactionInclusionProof` and `EventEmissionProof` can be constructed on top of
+
+        this structure.'
+      required:
+      - siblings
+      properties:
+        siblings:
           type: array
           items:
-            $ref: '#/components/schemas/EventV2'
-        vm_status:
+            $ref: '#/components/schemas/Hash'
+          description: 'All siblings in this proof, including the default ones. Siblings are ordered from the bottom
+
+            level to the root level.'
+    ErrResp:
+      type: object
+      required:
+      - message
+      properties:
+        message:
           type: string
-          description: A message summarizing the execution result produced by the MoveVM.
+    View:
+      type: object
+      required:
+      - epoch_id
+      - round
+      properties:
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: Identifier of the consensus epoch.
+        round:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the consensus round.
+    u64:
+      type: integer
+      format: u-int64
+      minimum: 0
+    TransactionInfoV2:
+      type: object
+      description: Information about a Supra transaction.
+      required:
+      - authenticator
+      - hash
+      - header
+      - payload
+      - status
+      properties:
+        authenticator:
+          type: object
+          description: The cryptographic material that was submitted with the transaction, according to its type.
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/BlockHeaderInfo'
+            description: 'Metadata about the block containing the transaction, if any. This field should
+
+              not be set if this [TransactionInfoV2] is yet to be included in a [Block].'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        header:
+          $ref: '#/components/schemas/SmrTransactionHeader'
+        payload:
+          type: object
+          description: The deserialized payload of the transaction according to its type.
+        output:
+          oneOf:
+          - $ref: '#/components/schemas/TransactionOutputV1'
+          - type: 'null'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
     EvmTransferOperation:
       type: object
       description: This is a convenience structure wrapping [`TransferOperation`] to implement (de)serialization logic.
@@ -1220,13 +740,291 @@ components:
         value:
           type: string
           description: Value of the transfer.
-    ErrResp:
+    AccountAddress:
+      type: string
+      description: Hex encoded account address.
+    BlockHeaderInfo:
       type: object
+      description: Metadata about a Supra block.
       required:
-      - message
+      - author
+      - hash
+      - height
+      - parent
+      - timestamp
+      - view
       properties:
-        message:
+        author:
+          $ref: '#/components/schemas/Identity'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        height:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Number of blocks before this block in the chain (including the genesis block).
+        parent:
+          $ref: '#/components/schemas/Hash'
+        timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+        view:
+          $ref: '#/components/schemas/View'
+    MoveTransactionOutputV1:
+      type: object
+      description: The execution output of a Move transaction.
+      required:
+      - gas_used
+      - events
+      - vm_status
+      properties:
+        gas_used:
+          type: integer
+          format: u-int64
+          description: The gas used by the transaction.
+          minimum: 0
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventV1'
+        vm_status:
           type: string
+          description: A message summarizing the execution result produced by the MoveVM.
+    Identity:
+      type: string
+      description: Hex encoded identity.
+    TransactionOutputV1:
+      oneOf:
+      - type: object
+        required:
+        - Dkg
+        properties:
+          Dkg:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: string
+        enum:
+        - Empty
+      - type: object
+        required:
+        - Move
+        properties:
+          Move:
+            $ref: '#/components/schemas/MoveTransactionOutputV1'
+      - type: object
+        required:
+        - Oracle
+        properties:
+          Oracle:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: object
+        required:
+        - Evm
+        properties:
+          Evm:
+            $ref: '#/components/schemas/EvmTransactionOutput'
+      description: '[crate::v1::TransactionOutputV1] with all fields in human-readable format.'
+    ExecutedBlockInfo:
+      type: object
+      description: Block metadata and existing statistics collected on executed block output.
+      required:
+      - header
+      properties:
+        header:
+          $ref: '#/components/schemas/BlockHeaderInfo'
+          description: Metadata about the block.
+        execution_statistics:
+          oneOf:
+          - type: object
+            description: Executed block statistics collected based on execution results.
+            properties:
+              automated_txn_count:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Number of the automated transactions executed/finalized in scope of the block.
+                minimum: 0
+              automated_txn_gas_unit_price:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Gas unit price defined by the chain for all automated transactions.
+                minimum: 0
+              block_gas_unit_price_min:
+                type:
+                - integer
+                - 'null'
+                description: Minimum gas unit price of the transactions included in the block.
+                minimum: 0
+              block_gas_unit_price_max:
+                type:
+                - integer
+                - 'null'
+                description: Maximum gas unit price of the transactions included in the block.
+                minimum: 0
+              block_total_user_gas_used:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Total used gas by user submitted transactions in the block.
+                minimum: 0
+              block_total_automated_gas_used:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Total used gas by automated transactions executed in scope of the block.
+                minimum: 0
+              user_txn_count:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Number of the user submitted transactions executed/finalized in scope of the block.
+                minimum: 0
+              automation_record_count:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Number of the automation registry records executed/finalized in scope of the block.
+                minimum: 0
+          - type: 'null'
+    MoveTransactionOutputV4:
+      type: object
+      description: The execution output of a Move transaction.
+      required:
+      - gas_used
+      - events
+      - vm_status
+      properties:
+        gas_used:
+          type: integer
+          format: u-int64
+          description: The gas used by the transaction.
+          minimum: 0
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventV2'
+        vm_status:
+          type: string
+          description: A message summarizing the execution result produced by the MoveVM.
+    Block:
+      type: object
+      description: The API representation of a Supra block.
+      required:
+      - header
+      properties:
+        header:
+          $ref: '#/components/schemas/BlockHeaderInfo'
+          description: Metadata about the block.
+        transactions:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/TransactionInfoV2'
+          description: 'The API representations of all transactions contained in the block, in the order that
+
+            they were executed.'
+    Guid:
+      type: object
+      description: A globally unique identifier derived from the sender's address and a counter
+      required:
+      - creation_number
+      - account_address
+      properties:
+        creation_number:
+          type: string
+          description: If creation_num is `i`, this is the `i+1`th GUID created by `addr`
+        account_address:
+          $ref: '#/components/schemas/AccountAddress'
+          description: Address that created the GUID
+    BlockMetadataInfoV4:
+      type: object
+      description: Details of block metadata transaction execution
+      required:
+      - hash
+      - output
+      - status
+      properties:
+        hash:
+          $ref: '#/components/schemas/Hash'
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/BlockHeaderInfo'
+            description: 'Metadata about the block containing the transaction, if any.
+
+              This field will not be set for transactions that are returned as a part of a block.'
+        output:
+          $ref: '#/components/schemas/TransactionOutputV4'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
+        inclusion_proof:
+          $ref: '#/components/schemas/TransactionInclusionProof'
+    TxExecutionStatus:
+      type: string
+      enum:
+      - Success
+      - Fail
+      - Invalid
+      - PendingAfterExecution
+      - Pending
+    TransactionOutputV4:
+      oneOf:
+      - type: object
+        required:
+        - Dkg
+        properties:
+          Dkg:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: string
+        enum:
+        - Empty
+      - type: object
+        required:
+        - Move
+        properties:
+          Move:
+            $ref: '#/components/schemas/MoveTransactionOutputV4'
+      - type: object
+        required:
+        - Oracle
+        properties:
+          Oracle:
+            $ref: '#/components/schemas/TxExecutionStatus'
+      - type: object
+        required:
+        - Evm
+        properties:
+          Evm:
+            $ref: '#/components/schemas/EvmTransactionOutput'
+      description: '[crate::v4::TransactionOutputV4] with all fields in human-readable format.'
+    BlockMetadataInfoV3:
+      type: object
+      description: Details of block metadata transaction execution
+      required:
+      - hash
+      - output
+      - status
+      properties:
+        hash:
+          $ref: '#/components/schemas/Hash'
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/BlockHeaderInfo'
+            description: 'Metadata about the block containing the transaction, if any.
+
+              This field will not be set for transactions that are returned as a part of a block.'
+        output:
+          $ref: '#/components/schemas/TransactionOutputV1'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
     TransactionInclusionProof:
       type: object
       description: Proof of a transaction's inclusion in the merkle accumulator tree.
@@ -1266,7 +1064,77 @@ components:
         certified_at_height:
           $ref: '#/components/schemas/u64'
           description: Block height at which the Merkle root was certified.
-    Block:
+    Hash:
+      type: string
+      description: Hex encoded hash
+    EpochId:
+      type: object
+      required:
+      - chain_id
+      - epoch
+      properties:
+        chain_id:
+          oneOf:
+          - type: integer
+            format: u-int8
+            minimum: 0
+          description: Unique identifier for this instance of the SMR.
+        epoch:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the epoch within the context of `chain_id`.
+    SmrTimestamp:
+      type: object
+      required:
+      - timestamp
+      properties:
+        timestamp:
+          type: integer
+          format: u-int64
+          description: The timestamp as measured in the number of microseconds since the unix epoch.
+          minimum: 0
+    SmrTransactionHeader:
+      type: object
+      required:
+      - chain_id
+      - expiration_timestamp
+      - sender
+      - sequence_number
+      - gas_unit_price
+      - max_gas_amount
+      properties:
+        chain_id:
+          type: integer
+          format: u-int64
+          description: 'The unique identifier for the instance of the Supra chain that this transaction should
+
+            be executed upon.'
+          minimum: 0
+        expiration_timestamp:
+          $ref: '#/components/schemas/SmrTimestamp'
+          description: The time at which this transaction should be discarded if it has not been executed.
+        sender:
+          $ref: '#/components/schemas/AccountAddress'
+          description: The standardized representation of the sender's account address in the target VM.
+        sequence_number:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: The sequence number of the sender's account in the target VM.
+        gas_unit_price:
+          type: integer
+          description: The amount of Supra that the sender is willing to pay per unit of gas.
+          minimum: 0
+        max_gas_amount:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: The maximum amount of gas that the sender is willing to spend.
+    BlockV3:
       type: object
       description: The API representation of a Supra block.
       required:
@@ -1275,12 +1143,144 @@ components:
         header:
           $ref: '#/components/schemas/BlockHeaderInfo'
           description: Metadata about the block.
+        execution_statistics:
+          oneOf:
+          - type: object
+            description: Executed block statistics collected based on execution results.
+            properties:
+              automated_txn_count:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Number of the automated transactions executed/finalized in scope of the block.
+                minimum: 0
+              automated_txn_gas_unit_price:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Gas unit price defined by the chain for all automated transactions.
+                minimum: 0
+              block_gas_unit_price_min:
+                type:
+                - integer
+                - 'null'
+                description: Minimum gas unit price of the transactions included in the block.
+                minimum: 0
+              block_gas_unit_price_max:
+                type:
+                - integer
+                - 'null'
+                description: Maximum gas unit price of the transactions included in the block.
+                minimum: 0
+              block_total_user_gas_used:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Total used gas by user submitted transactions in the block.
+                minimum: 0
+              block_total_automated_gas_used:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Total used gas by automated transactions executed in scope of the block.
+                minimum: 0
+              user_txn_count:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Number of the user submitted transactions executed/finalized in scope of the block.
+                minimum: 0
+              automation_record_count:
+                type:
+                - integer
+                - 'null'
+                format: u-int64
+                description: Number of the automation registry records executed/finalized in scope of the block.
+                minimum: 0
+          - type: 'null'
         transactions:
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/TransactionInfoV2'
-          description: 'The API representations of all transactions contained in the block, in the order that
+          oneOf:
+          - type: array
+            items:
+              oneOf:
+              - allOf:
+                - $ref: '#/components/schemas/TransactionInfoV2'
+                - type: object
+                  required:
+                  - txn_type
+                  properties:
+                    txn_type:
+                      type: string
+                      enum:
+                      - user
+              - allOf:
+                - $ref: '#/components/schemas/TransactionInfoV2'
+                - type: object
+                  required:
+                  - txn_type
+                  properties:
+                    txn_type:
+                      type: string
+                      enum:
+                      - automated
+              - allOf:
+                - $ref: '#/components/schemas/BlockMetadataInfoV3'
+                - type: object
+                  required:
+                  - txn_type
+                  properties:
+                    txn_type:
+                      type: string
+                      enum:
+                      - block_metadata
+              - allOf:
+                - $ref: '#/components/schemas/AutomationRecordInfoV3'
+                - type: object
+                  required:
+                  - txn_type
+                  properties:
+                    txn_type:
+                      type: string
+                      enum:
+                      - automation_record
+          - type: 'null'
+    TransactionInfoV4:
+      type: object
+      description: Information about a Supra transaction.
+      required:
+      - authenticator
+      - hash
+      - header
+      - payload
+      - status
+      properties:
+        authenticator:
+          type: object
+          description: The cryptographic material that was submitted with the transaction, according to its type.
+        block_header:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/BlockHeaderInfo'
+            description: 'Metadata about the block containing the transaction, if any. This field should
 
-            they were executed.'
+              not be set if this [TransactionInfoV4] is yet to be included in a [Block].'
+        hash:
+          $ref: '#/components/schemas/Hash'
+        header:
+          $ref: '#/components/schemas/SmrTransactionHeader'
+        payload:
+          type: object
+          description: The deserialized payload of the transaction according to its type.
+        output:
+          oneOf:
+          - $ref: '#/components/schemas/TransactionOutputV4'
+          - type: 'null'
+        status:
+          $ref: '#/components/schemas/TxExecutionStatus'
+        inclusion_proof:
+          $ref: '#/components/schemas/TransactionInclusionProof'

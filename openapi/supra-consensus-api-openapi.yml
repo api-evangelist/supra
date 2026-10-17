@@ -435,78 +435,6 @@ paths:
                 $ref: '#/components/schemas/ErrResp'
 components:
   schemas:
-    BlockInfo:
-      type: object
-      description: Metadata of a block including its digest.
-      required:
-      - hash
-      - header
-      properties:
-        hash:
-          $ref: '#/components/schemas/Hash'
-          description: Digest of the related block.
-        header:
-          $ref: '#/components/schemas/BlockHeader'
-          description: Other metadata of the related block.
-    Hash:
-      type: string
-      description: Hex encoded hash
-    ValidatorV1:
-      type: object
-      description: Information about a validator participating in a V1 Committee.
-      required:
-      - keys
-      - stake
-      - stake_pool_address
-      properties:
-        dkg_node_number:
-          type:
-          - integer
-          - 'null'
-          format: u-int32
-          description: The position of the node in the DKG committee, if any.
-          minimum: 0
-        keys:
-          $ref: '#/components/schemas/ValidatorPublicKeys'
-          description: The public keys used by the validator.
-        stake:
-          type: integer
-          format: u-int64
-          description: Stake of the validator.
-          minimum: 0
-        stake_pool_address:
-          $ref: '#/components/schemas/AccountAddress'
-          description: The Move account address of the validator's stake pool.
-    CommitteeV0:
-      type: object
-      description: 'A committee of validators operating as a subset of the Supra blockchain network.
-
-        Each Committee is assigned to perform a task for the duration of its associated epoch.'
-      required:
-      - epoch_info
-      - members
-      properties:
-        bls_threshold_public_key:
-          type:
-          - string
-          - 'null'
-          description: The BLS threshold public key of the Committee.
-        epoch_info:
-          $ref: '#/components/schemas/EpochInfo'
-          description: Metadata about the epoch for which this Committee is authorized.
-        members:
-          type: object
-          description: 'An ordered map of the ids of the nodes participating in this Committee to their
-
-            remaining metadata.'
-          additionalProperties:
-            $ref: '#/components/schemas/ValidatorV0'
-          propertyNames:
-            type: string
-            description: Hex encoded identity.
-    AccountAddress:
-      type: string
-      description: Hex encoded account address.
     CommitteeAuthorization:
       type: object
       description: 'A certificate indicating that the Committee with the hash digest contained in the
@@ -517,51 +445,34 @@ components:
       properties:
         certificate:
           $ref: '#/components/schemas/Certificate_CommitteeInfo'
-    AuthorizedCommitteeV1:
+    AuthorizedCommittee:
+      oneOf:
+      - type: object
+        required:
+        - V0
+        properties:
+          V0:
+            $ref: '#/components/schemas/AuthorizedCommitteeV0'
+      - type: object
+        required:
+        - V1
+        properties:
+          V1:
+            $ref: '#/components/schemas/AuthorizedCommitteeV1'
+      description: A versioned authorized committee, wrapping either V0 or V1.
+    BlockVoteInfo:
       type: object
-      description: A V1 authorized committee.
-      required:
-      - authorization
-      - committee
-      properties:
-        authorization:
-          $ref: '#/components/schemas/CommitteeAuthorization'
-          description: The authorization certificate for this committee.
-        committee:
-          $ref: '#/components/schemas/CommitteeV1'
-          description: The Committee authorized by the committee authorization.
-    View:
-      type: object
-      required:
-      - epoch_id
-      - round
-      properties:
-        epoch_id:
-          $ref: '#/components/schemas/EpochId'
-          description: Identifier of the consensus epoch.
-        round:
-          oneOf:
-          - type: integer
-            format: u-int64
-            minimum: 0
-          description: Identifier of the consensus round.
-    u64:
-      type: integer
-      format: u-int64
-      minimum: 0
-    CertifiedBlock:
-      type: object
-      description: 'An [SmrBlock] certified by an [SmrQC].
-
-        '
+      description: Metadata of a Moonshot consensus vote.
       required:
       - block
-      - qc
+      - kind
       properties:
         block:
-          $ref: '#/components/schemas/SmrBlock'
-        qc:
-          $ref: '#/components/schemas/SmrQC'
+          $ref: '#/components/schemas/BlockInfo'
+          description: Metadata of the block being voted for.
+        kind:
+          $ref: '#/components/schemas/VoteType'
+          description: The type of this vote. See `VoteType`.
     BlockHeader:
       type: object
       required:
@@ -589,163 +500,58 @@ components:
         view:
           $ref: '#/components/schemas/View'
           description: Identifier of the view for which this block was proposed.
-    VoteType:
-      type: string
-      description: 'The different types of valid vote messages in Moonshot.
-
-        '
-      enum:
-      - Commit
-      - PrepareFallback
-      - PrepareNormal
-      - PrepareOptimistic
-    ValidatorV0:
+    BlockInfo:
       type: object
-      description: Information about a validator participating in a Committee.
+      description: Metadata of a block including its digest.
       required:
-      - ed25519_public_key
-      - stake
-      properties:
-        bls_public_key_share:
-          type:
-          - string
-          - 'null'
-          description: The BLS public key share for consensus, if any.
-        dkg_node_number:
-          type:
-          - integer
-          - 'null'
-          format: u-int32
-          description: The position of the node in the DKG committee, if any.
-          minimum: 0
-        ed25519_public_key:
-          type: string
-          description: The ED25519 public key for consensus.
-        stake:
-          type: integer
-          format: u-int64
-          description: Stake of the validator.
-          minimum: 0
-    Certificate_CommitteeInfo:
-      type: object
-      required:
-      - certifying_committee
-      - data
-      - kind
-      - signature
-      - voters
-      properties:
-        certifying_committee:
-          $ref: '#/components/schemas/Hash'
-          description: The hash digest of the [Committee] that created this [sosmr::Certificate].
-        data:
-          $ref: '#/components/schemas/CommitteeInfo'
-          description: The data from which `signature` is derived.
-        kind:
-          $ref: '#/components/schemas/CertificateThresholdType'
-          description: 'The type of threshold that `signature` satisfies with respect to the [Committee]
-
-            that created this [sosmr::Certificate].'
-        signature:
-          type: object
-          description: A signature on the [CertificateSignatureData] transformation of `data`.
-        voters:
-          type: array
-          items:
-            type: boolean
-          description: 'Identifies the nodes whose signatures were used to construct `signature`.
-
-            Each index corresponds to an index in the vector of public keys of the
-
-            participants in the corresponding committee, with its value being set
-
-            to `true` if the participant''s signature was included in `signature`.'
-    Identity:
-      type: string
-      description: Hex encoded identity.
-    Certificate_BlockVoteInfo:
-      type: object
-      required:
-      - certifying_committee
-      - data
-      - kind
-      - signature
-      - voters
-      properties:
-        certifying_committee:
-          $ref: '#/components/schemas/Hash'
-          description: The hash digest of the [Committee] that created this [sosmr::Certificate].
-        data:
-          $ref: '#/components/schemas/BlockVoteInfo'
-          description: The data from which `signature` is derived.
-        kind:
-          $ref: '#/components/schemas/CertificateThresholdType'
-          description: 'The type of threshold that `signature` satisfies with respect to the [Committee]
-
-            that created this [sosmr::Certificate].'
-        signature:
-          type: object
-          description: A signature on the [CertificateSignatureData] transformation of `data`.
-        voters:
-          type: array
-          items:
-            type: boolean
-          description: 'Identifies the nodes whose signatures were used to construct `signature`.
-
-            Each index corresponds to an index in the vector of public keys of the
-
-            participants in the corresponding committee, with its value being set
-
-            to `true` if the participant''s signature was included in `signature`.'
-    SmrBlock:
-      type: object
-      description: A Supra Moonshot block.
-      required:
-      - digest
+      - hash
       - header
-      - payload
       properties:
-        digest:
+        hash:
           $ref: '#/components/schemas/Hash'
-          description: 'Cached digest. Must be updated if `header` or `payload` are ever updated.
-
-            We cache block digests because they are used often. This lets us avoid
-
-            the overhead of recomputing the digest each time.'
+          description: Digest of the related block.
         header:
           $ref: '#/components/schemas/BlockHeader'
-          description: Metadata.
-        payload:
-          type: object
-          description: Payload.
-    SmrTimestamp:
+          description: Other metadata of the related block.
+    ErrResp:
       type: object
       required:
-      - timestamp
+      - message
       properties:
-        timestamp:
-          type: integer
-          format: u-int64
-          description: The timestamp as measured in the number of microseconds since the unix epoch.
-          minimum: 0
-    EpochId:
+        message:
+          type: string
+    View:
       type: object
       required:
-      - chain_id
-      - epoch
+      - epoch_id
+      - round
       properties:
-        chain_id:
-          oneOf:
-          - type: integer
-            format: u-int8
-            minimum: 0
-          description: Unique identifier for this instance of the SMR.
-        epoch:
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: Identifier of the consensus epoch.
+        round:
           oneOf:
           - type: integer
             format: u-int64
             minimum: 0
-          description: Identifier of the epoch within the context of `chain_id`.
+          description: Identifier of the consensus round.
+    u64:
+      type: integer
+      format: u-int64
+      minimum: 0
+    AuthorizedCommitteeV0:
+      type: object
+      description: A V0 authorized committee.
+      required:
+      - authorization
+      - committee
+      properties:
+        authorization:
+          $ref: '#/components/schemas/CommitteeAuthorization'
+          description: The authorization certificate for this committee.
+        committee:
+          $ref: '#/components/schemas/CommitteeV0'
+          description: The Committee authorized by the committee authorization.
     ValidatorPublicKeys:
       type: object
       description: 'The public keys held by a Supra validator.
@@ -797,9 +603,39 @@ components:
                 type: string
                 description: The hex encoded ED25519 public key.
           description: The public keys corresponding to the Supra-written code keys.
-    AuthorizedCommitteeV0:
+    CommitteeV0:
       type: object
-      description: A V0 authorized committee.
+      description: 'A committee of validators operating as a subset of the Supra blockchain network.
+
+        Each Committee is assigned to perform a task for the duration of its associated epoch.'
+      required:
+      - epoch_info
+      - members
+      properties:
+        bls_threshold_public_key:
+          type:
+          - string
+          - 'null'
+          description: The BLS threshold public key of the Committee.
+        epoch_info:
+          $ref: '#/components/schemas/EpochInfo'
+          description: Metadata about the epoch for which this Committee is authorized.
+        members:
+          type: object
+          description: 'An ordered map of the ids of the nodes participating in this Committee to their
+
+            remaining metadata.'
+          additionalProperties:
+            $ref: '#/components/schemas/ValidatorV0'
+          propertyNames:
+            type: string
+            description: Hex encoded identity.
+    AccountAddress:
+      type: string
+      description: Hex encoded account address.
+    AuthorizedCommitteeV1:
+      type: object
+      description: A V1 authorized committee.
       required:
       - authorization
       - committee
@@ -808,18 +644,95 @@ components:
           $ref: '#/components/schemas/CommitteeAuthorization'
           description: The authorization certificate for this committee.
         committee:
-          $ref: '#/components/schemas/CommitteeV0'
+          $ref: '#/components/schemas/CommitteeV1'
           description: The Committee authorized by the committee authorization.
-    SmrQC:
+    CommitteeInfo:
+      type: object
+      description: Metadata about a Committee required to construct a committee authorization.
+      required:
+      - epoch_id
+      - hash
+      properties:
+        epoch_id:
+          $ref: '#/components/schemas/EpochId'
+          description: The epoch-id of the related Committee.
+        hash:
+          $ref: '#/components/schemas/Hash'
+          description: The hash digest of the related Committee.
+    Identity:
+      type: string
+      description: Hex encoded identity.
+    Certificate_CommitteeInfo:
       type: object
       required:
-      - certificate
+      - certifying_committee
+      - data
+      - kind
+      - signature
+      - voters
       properties:
-        certificate:
-          $ref: '#/components/schemas/Certificate_BlockVoteInfo'
-          description: 'A multisig or threshold signature proving that at least 2f+1 validators
+        certifying_committee:
+          $ref: '#/components/schemas/Hash'
+          description: The hash digest of the [Committee] that created this [sosmr::Certificate].
+        data:
+          $ref: '#/components/schemas/CommitteeInfo'
+          description: The data from which `signature` is derived.
+        kind:
+          $ref: '#/components/schemas/CertificateThresholdType'
+          description: 'The type of threshold that `signature` satisfies with respect to the [Committee]
 
-            voted for this block.'
+            that created this [sosmr::Certificate].'
+        signature:
+          type: object
+          description: A signature on the [CertificateSignatureData] transformation of `data`.
+        voters:
+          type: array
+          items:
+            type: boolean
+          description: 'Identifies the nodes whose signatures were used to construct `signature`.
+
+            Each index corresponds to an index in the vector of public keys of the
+
+            participants in the corresponding committee, with its value being set
+
+            to `true` if the participant''s signature was included in `signature`.'
+    VoteType:
+      type: string
+      description: 'The different types of valid vote messages in Moonshot.
+
+        '
+      enum:
+      - Commit
+      - PrepareFallback
+      - PrepareNormal
+      - PrepareOptimistic
+    ValidatorV0:
+      type: object
+      description: Information about a validator participating in a Committee.
+      required:
+      - ed25519_public_key
+      - stake
+      properties:
+        bls_public_key_share:
+          type:
+          - string
+          - 'null'
+          description: The BLS public key share for consensus, if any.
+        dkg_node_number:
+          type:
+          - integer
+          - 'null'
+          format: u-int32
+          description: The position of the node in the DKG committee, if any.
+          minimum: 0
+        ed25519_public_key:
+          type: string
+          description: The ED25519 public key for consensus.
+        stake:
+          type: integer
+          format: u-int64
+          description: Stake of the validator.
+          minimum: 0
     EpochInfo:
       type: object
       description: Metadata about an epoch.
@@ -839,50 +752,6 @@ components:
         start_time:
           $ref: '#/components/schemas/SmrTimestamp'
           description: The timestamp of the final block of the previous epoch.
-    BlockVoteInfo:
-      type: object
-      description: Metadata of a Moonshot consensus vote.
-      required:
-      - block
-      - kind
-      properties:
-        block:
-          $ref: '#/components/schemas/BlockInfo'
-          description: Metadata of the block being voted for.
-        kind:
-          $ref: '#/components/schemas/VoteType'
-          description: The type of this vote. See `VoteType`.
-    AuthorizedCommittee:
-      oneOf:
-      - type: object
-        required:
-        - V0
-        properties:
-          V0:
-            $ref: '#/components/schemas/AuthorizedCommitteeV0'
-      - type: object
-        required:
-        - V1
-        properties:
-          V1:
-            $ref: '#/components/schemas/AuthorizedCommitteeV1'
-      description: A versioned authorized committee, wrapping either V0 or V1.
-    BinaryData:
-      description: A type reserved for internal use to represent [HttpResponse] with binary data.
-      default: null
-    CommitteeInfo:
-      type: object
-      description: Metadata about a Committee required to construct a committee authorization.
-      required:
-      - epoch_id
-      - hash
-      properties:
-        epoch_id:
-          $ref: '#/components/schemas/EpochId'
-          description: The epoch-id of the related Committee.
-        hash:
-          $ref: '#/components/schemas/Hash'
-          description: The hash digest of the related Committee.
     CommitteeV1:
       type: object
       description: 'A V1 committee of validators operating as a subset of the Supra blockchain network.
@@ -921,23 +790,121 @@ components:
           propertyNames:
             type: string
             description: Hex encoded identity.
-    CertificateThresholdType:
+    SmrBlock:
+      type: object
+      description: A Supra Moonshot block.
+      required:
+      - digest
+      - header
+      - payload
+      properties:
+        digest:
+          $ref: '#/components/schemas/Hash'
+          description: 'Cached digest. Must be updated if `header` or `payload` are ever updated.
+
+            We cache block digests because they are used often. This lets us avoid
+
+            the overhead of recomputing the digest each time.'
+        header:
+          $ref: '#/components/schemas/BlockHeader'
+          description: Metadata.
+        payload:
+          type: object
+          description: Payload.
+    Hash:
       type: string
-      enum:
-      - Validity
-      - Quorum
-      - Unanimous
-      - BcftValidity
-      - BcftQuorum
-      - BcftFallbackViewChange
-      - ClanMajority
-    ErrResp:
+      description: Hex encoded hash
+    ValidatorV1:
+      type: object
+      description: Information about a validator participating in a V1 Committee.
+      required:
+      - keys
+      - stake
+      - stake_pool_address
+      properties:
+        dkg_node_number:
+          type:
+          - integer
+          - 'null'
+          format: u-int32
+          description: The position of the node in the DKG committee, if any.
+          minimum: 0
+        keys:
+          $ref: '#/components/schemas/ValidatorPublicKeys'
+          description: The public keys used by the validator.
+        stake:
+          type: integer
+          format: u-int64
+          description: Stake of the validator.
+          minimum: 0
+        stake_pool_address:
+          $ref: '#/components/schemas/AccountAddress'
+          description: The Move account address of the validator's stake pool.
+    Certificate_BlockVoteInfo:
       type: object
       required:
-      - message
+      - certifying_committee
+      - data
+      - kind
+      - signature
+      - voters
       properties:
-        message:
-          type: string
+        certifying_committee:
+          $ref: '#/components/schemas/Hash'
+          description: The hash digest of the [Committee] that created this [sosmr::Certificate].
+        data:
+          $ref: '#/components/schemas/BlockVoteInfo'
+          description: The data from which `signature` is derived.
+        kind:
+          $ref: '#/components/schemas/CertificateThresholdType'
+          description: 'The type of threshold that `signature` satisfies with respect to the [Committee]
+
+            that created this [sosmr::Certificate].'
+        signature:
+          type: object
+          description: A signature on the [CertificateSignatureData] transformation of `data`.
+        voters:
+          type: array
+          items:
+            type: boolean
+          description: 'Identifies the nodes whose signatures were used to construct `signature`.
+
+            Each index corresponds to an index in the vector of public keys of the
+
+            participants in the corresponding committee, with its value being set
+
+            to `true` if the participant''s signature was included in `signature`.'
+    EpochId:
+      type: object
+      required:
+      - chain_id
+      - epoch
+      properties:
+        chain_id:
+          oneOf:
+          - type: integer
+            format: u-int8
+            minimum: 0
+          description: Unique identifier for this instance of the SMR.
+        epoch:
+          oneOf:
+          - type: integer
+            format: u-int64
+            minimum: 0
+          description: Identifier of the epoch within the context of `chain_id`.
+    SmrTimestamp:
+      type: object
+      required:
+      - timestamp
+      properties:
+        timestamp:
+          type: integer
+          format: u-int64
+          description: The timestamp as measured in the number of microseconds since the unix epoch.
+          minimum: 0
+    BinaryData:
+      description: A type reserved for internal use to represent [HttpResponse] with binary data.
+      default: null
     ConsensusBlock:
       type: object
       description: The API representation of a Supra Certified Consensus block.
@@ -952,3 +919,36 @@ components:
           description: 'The API representations of all batches of transactions
 
             that were finalized by this block in the order that they were executed.'
+    CertifiedBlock:
+      type: object
+      description: 'An [SmrBlock] certified by an [SmrQC].
+
+        '
+      required:
+      - block
+      - qc
+      properties:
+        block:
+          $ref: '#/components/schemas/SmrBlock'
+        qc:
+          $ref: '#/components/schemas/SmrQC'
+    CertificateThresholdType:
+      type: string
+      enum:
+      - Validity
+      - Quorum
+      - Unanimous
+      - BcftValidity
+      - BcftQuorum
+      - BcftFallbackViewChange
+      - ClanMajority
+    SmrQC:
+      type: object
+      required:
+      - certificate
+      properties:
+        certificate:
+          $ref: '#/components/schemas/Certificate_BlockVoteInfo'
+          description: 'A multisig or threshold signature proving that at least 2f+1 validators
+
+            voted for this block.'
